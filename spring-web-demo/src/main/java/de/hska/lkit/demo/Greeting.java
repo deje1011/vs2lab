@@ -2,15 +2,16 @@ package de.hska.lkit.demo;
 
 public class Greeting {
 
-    private long id;
+    private String name;
     private String content;
+    private boolean bootstrap;
 
-    public long getId() {
-        return id;
+    public String getName() {
+        return name;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getContent() {
@@ -21,4 +22,11 @@ public class Greeting {
         this.content = content;
     }
 
+	public boolean isBootstrap() {
+		return bootstrap;
+	}
+
+	public void setBootstrap(boolean bootstrap) {
+		this.bootstrap = bootstrap;
+	}    
 }
