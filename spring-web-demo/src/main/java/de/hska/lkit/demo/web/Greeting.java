@@ -1,4 +1,4 @@
-package de.hska.lkit.demo;
+package de.hska.lkit.demo.web;
 
 public class Greeting {
 

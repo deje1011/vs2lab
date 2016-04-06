@@ -1,4 +1,4 @@
-package de.hska.lkit.demo;
+package de.hska.lkit.demo.web;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
