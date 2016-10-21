@@ -19,7 +19,7 @@ public interface UserRepository {
 	 * 
 	 * @return
 	 */
-	public Map<Object, Object> findAllUsers();
+	public Map<String, User> getAllUsers();
 	
 	
 	/**
@@ -28,6 +28,16 @@ public interface UserRepository {
 	 * @param username
 	 * @return
 	 */
-	public User findUser(String username);
+	public User getUser(String username);
+
+
+	/**
+	 * 
+	 * find all users with characters in username
+	 * 
+	 * @param characters
+	 * @return
+	 */
+	public Map<String, User> findUsersWith(String characters);
 	
 }

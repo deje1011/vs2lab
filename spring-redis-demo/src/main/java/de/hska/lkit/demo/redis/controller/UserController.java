@@ -37,8 +37,9 @@ public class UserController {
 	 */
 	@RequestMapping(value = "/users", method = RequestMethod.GET)
 	public String getAllUsers(Model model) {
-		Map<Object, Object> retrievedUsers = userRepository.findAllUsers();
+		Map<String, User> retrievedUsers = userRepository.getAllUsers();
 		model.addAttribute("users", retrievedUsers);
+
 		return "users";
 	}
 
@@ -52,7 +53,7 @@ public class UserController {
 	 */
 	@RequestMapping(value = "/user/{username}", method = RequestMethod.GET)
 	public String getOneUsers(@PathVariable("username") String username, Model model) {
-		User found = userRepository.findUser(username);
+		User found = userRepository.getUser(username);
 
 		model.addAttribute("userFound", found);
 		return "oneUser";
@@ -82,10 +83,31 @@ public class UserController {
 		userRepository.saveUser(user);
 		model.addAttribute("message", "User successfully added");
 
-		Map<Object, Object> retrievedUsers = userRepository.findAllUsers();
+		Map<String, User> retrievedUsers = userRepository.getAllUsers();
 
 		model.addAttribute("users", retrievedUsers);
 		return "users";
 	}
+	
+	
+	/**
+	 * search usernames containing the sequence of characters
+	 * 
+	 * @param user
+	 *            User object filled in form
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/searchuser/{pattern}", method = RequestMethod.GET)
+	public String searchUser(@PathVariable("pattern") String pattern, @ModelAttribute User user, Model model) {
+
+		Map<String, User> retrievedUsers = userRepository.findUsersWith(pattern);
+
+		model.addAttribute("users", retrievedUsers);
+		return "users";
+	}
+	
+	
+	
 
 }
