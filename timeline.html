@@ -12,33 +12,143 @@
 <link rel="stylesheet" type="text/css"  href="layout.css"/>
 </head>
 <body>
-	<div class="container">
-	
-        <h1>Twitter<br>Klon</h1>
-        <h4>Registration</h4>
-		
-		<form class="form" action="#" th:action="@{/adduser}"
-			th:object="${user}" method="post">
-			<div class="form-group">
-				<label> Username </label> 
-                <input class="form-control" type="text" th:field="*{username}" />
-			</div>
-			<div class="form-group">
-				<label> Password </label> 
-                <input class="form-control" type="password" th:field="*{password}" />
-			</div>
-			<div class="form-group">
-				<label> Repeat Password </label> 
-                <input type="text" class="form-control" th:field="*{firstname}" />
-			</div>
-            <div class="btn-container">
-                <button type="submit" class="btn btn-default">Register</button>
-                <a href="Login.html">Cancel</a>
-            </div>
-            
-		</form>
+    <nav class="navbar navbar-default navbar-static-top"> 
+          <div class="container-fluid"> 
+            <div class="navbar-header"> 
+              <button type="button" class="collapsed navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-7" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span> 
+                <span class="icon-bar"></span> 
+                <span class="icon-bar"></span> 
+                <span class="icon-bar"></span> 
+              </button> 
+              <a href="#" class="navbar-brand flexbox"><img class="img-circle" src="images/auge.jpg" width=30>Twitter Klon</a> 
+            </div> 
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-7"> 
+                <ul class="nav navbar-nav"> 
+                    <li><a href="#">Search</a></li>
+                    <li class="active"><a href="timeline.html">Timeline</a></li> 
+                    <li><a href="profile.html">Profile</a></li> 
+                    <li><a href="login.html">Logout</a></li>
+                </ul> 
+              </div> 
+            </div> 
+        </nav>
+	<div class="container-content">
+        <h3 class="profile">Global Timeline</h3>    
         
-		
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Type your message...">
+            <span class="input-group-btn">
+              <button class="btn btn-default" type="button">Post</button>
+            </span>
+        </div>
+        <div class="chronik">
+            <table class="table">               
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width=40><p>Hannelore Hotpink</p>
+                        </th>
+                        <th colspan="2"><p>4h</p></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <p>Maunzerles Katzenschnupfen:
+                        Katzenschnupfen ist eine Sammelbezeichnung für ansteckende Erkrankungen der Atemwege und der Schleimhäute des Kopfes bei Katzen. Synonym verwendet werden die Bezeichnungen infektiöse Katzenrhinitis, Katzenpneumonitis, cat flu und Rhinotracheitis infectiosa felis.
+
+                            Es handelt sich hierbei also um einen Symptomkomplex, der durch unterschiedliche Erreger hervorgerufen wird. Er betrifft Nase, Maulhöhle und Augen. Beteiligte Erreger sind verschiedene Viren (Herpes- und Caliciviren) und Bakterien (Chlamydien, Bordetellen und Mykoplasmen). Da die Erreger sich gegenseitig begünstigen und damit parallel auftreten können und Behandlung und Bekämpfung dieser Erkrankungen etliche Gemeinsamkeiten aufweisen, ist diese Sammelbezeichnung dennoch berechtigt.#maunzerleischkrank #gutebesserungmaunzerle #katzenschnupfen #maunzerledupackstdas #ichliebemeinmaunzerle #schützteurekatzenvorkatzenschnupfen #maunzerlehatsharterwischt #hatschiiiii #aufdersuchenachkatzentempos #richtigersherlock
+                    </p>
+                    </tr>
+                </tbody>
+            </table>  
+            <table class="table">               
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width=40><p>Frederike Fuchsrot</p>
+                        </th>
+                        <th colspan="2"><p>4h</p></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <p>Ein gemütlicher Abend mit der Familie ist doch einfach mal wieder schön #familyisthebest #iloveit #kekseessen #sbäuchlefreutsich
+                    </p>
+                    </tr>
+                </tbody>
+            </table>  
+            <table class="table">               
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width=40><p>Karl Karottenblau</p>
+                        </th>
+                        <th colspan="2"><p>5h</p></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <p>Alle meine Entchen schwimmen auf dem See, schwimmen auf dem See, Köpfchen in das Wasser Schwänzchen in die Höh' #blubbblubbblubb #schnatterschnatter #kinderlieder #ohrwurm #einfachimmerwiedertoll
+                    </p>
+                    </tr>
+                </tbody>
+                
+            </table> 
+            <table class="table">               
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width=40><p>Agnes Amarettobraun</p>
+                        </th>
+                        <th colspan="2"><p>7h</p></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <p>Verkaufe mein neues E-Bike, ist in super Zustand, Farbe natürlich amarettobraun für leute bis 300 kg auch für oldies geeignet meldet euch einfach bei mir dann können wir n kaffee trinken gehen und mal ne runde fahren #Wettrennenmitferrari #ebikegewinnt #proschekannmirgarnichts #raceddenhügelhoch
+                        </p>
+                    </tr>
+                </tbody>
+                
+            </table> 
+            <table class="table">               
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width=40><p>Liselotte Leguanlolli</p>
+                        </th>
+                        <th colspan="2"><p>7h</p></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <p>Der absolut geilste Reisetip Heian Jingu Shrine: Im Herzen Japans gelegen gehört Kyoto bei Japantouristen fest ins Programm. Zu den Sehenswürdigkeiten der Stadt zählen der Kaiserpalast, zahlreiche Tempel und Schreine sowie weitere berühmte und historische Stätten – 17 davon gehören sogar zum UNESCO-Weltkulturerbe. Das macht Kyoto zu einem beliebten Reiseziel, das lebendige Tradition und die Ästhetik des alten Japans vermittelt. Hier finden Sie zahlreiche traditionell japanische Hotels und anspruchsvolle Gastronomie, in der Sie die raffinierte Küche von Kyoto genießen können. Was Kyoto zu bieten hat, finden Sie sonst in keiner Stadt der Welt. #travelaroundtheworld #asia #japan #besttimeever #takemeback
+                    </p>
+                    </tr>
+                </tbody>
+                
+            </table> 
+            <table class="table">               
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width=40><p>Gustav Gänseblümchengelb</p>
+                        </th>
+                        <th colspan="2"><p>8h</p></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <p>Seit die Merkel drann ist,geht es berg ab mit deutschland..ichfinde es schade und hätte auch nie gedacht ,das die meisten deutsche verlehrnt haben 1+1 zusammen zu zählen. Seit die merkel drann ist wandelt sie deutschland zu alte ddr um. 1 Sie hat unser hauptstadt weggenommen,ohne uns zu fragen und dann noch auf unsere kosten.2 haben wir für den aufbau der ddr zahlen durfen. und nicht mehr für brd, dem entsprechen siet brd aus. 3 die ein euro jobs 4 rauchern mussten in gerennte raumen,dannach total rauch verbot,obwohl wir genau soviel bezahlen wie die nichtrauchern. 5 in deutchland wohnen 50% turken.40% deutche und10% andere ausländer. 6 ist die kriminalität emmens gestiegen.wo 90% turken sind.sogar im knast leben mehr turken als deutsche. 7 wollen die noch mehr ausländer nach deutschland holen für arbeit #ichnickskonnendeutch 
+                    </p>
+                    </tr>
+                </tbody>
+                
+            </table> 
+        </div>
+            
+
 	</div>
 </body>
 </html>
