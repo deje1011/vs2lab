@@ -1,5 +1,5 @@
 @charset "UTF-8";
-html,body{
+html, body{
     background-color: lightcyan;
 }
 .flexbox {
@@ -7,15 +7,17 @@ html,body{
     justify-content: center;
     align-items: center;
 }
+.container-content{
+    margin:3% 7% ;
+}
 
-.container h1,h4{
+.login {
     text-transform: uppercase;
     padding-left: 15%;
 }
 
 .form-group{
    padding: 5px 15px;
-    
 }
 .btn-container{
     display:flex;
@@ -35,27 +37,29 @@ html,body{
 .abstand-rechts {
   margin-right: 30px; 
 }
-.user{
-    margin-top: 20px;
-    margin-left: 5px;
-    margin-bottom: 70px;
+.user p{
+    line-height: 90px;
+    font-size: 16px;
 }
-.user h5{
-    padding-top: 7%;
-}
-.post{
-    float: right;
-    margin-top: 10px
-}
-.col-lg-6{
-    margin-top: 10%;
+.input-group{
+    margin: 5% 0;
 }
 
-.timeline{
-    height: 300px;
-    margin-left: 15px;
-    margin-top: 30px;
-    background-color:cornflowerblue;
-    padding: 10px;
-}    
-    
+.table tbody tr p{
+    word-wrap:break-word;
+    margin: 10px;
+}
+.table thead p{
+    line-height: 40px;
+}
+.table thead p:nth-child(1){
+    float:right;
+}
+.table{
+    background-color:#f9f9f9;
+}
+.chronik{
+    margin-top: 40px;
+}
+
+

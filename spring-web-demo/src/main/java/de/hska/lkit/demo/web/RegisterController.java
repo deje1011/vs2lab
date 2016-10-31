@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class RegisterController {
     @RequestMapping(value = "/register")
     public String deliverRegistrationTemplate() {
-        return "register";
+        return "registration";
     }
 }
