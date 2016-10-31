@@ -1,6 +1,6 @@
 @charset "UTF-8";
 html, body{
-    background-color: lightcyan;
+    background-color: darkcyan;
 }
 .flexbox {
     display: flex;
@@ -60,6 +60,14 @@ html, body{
 }
 .chronik{
     margin-top: 40px;
+}
+
+.well{
+    background-color: white;
+}
+
+.title{
+    color: white;
 }
 
 
