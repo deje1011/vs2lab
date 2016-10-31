@@ -1,6 +1,6 @@
 @charset "UTF-8";
 html, body{
-    background-color: darkcyan;
+    background-color: white;
 }
 .flexbox {
     display: flex;
@@ -66,8 +66,6 @@ html, body{
     background-color: white;
 }
 
-.title{
-    color: white;
-}
+
 
 
