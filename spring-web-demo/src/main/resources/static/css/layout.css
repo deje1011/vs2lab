@@ -1,0 +1,71 @@
+@charset "UTF-8";
+html, body{
+    background-color: white;
+}
+.flexbox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.container-content{
+    margin:3% 7% ;
+}
+
+.login {
+    text-transform: uppercase;
+    padding-left: 15%;
+}
+
+.form-group{
+   padding: 5px 15px;
+}
+.btn-container{
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+}
+.btn-container a{
+    padding-top: 10px;
+}
+
+.navbar{
+    margin: 0;
+}
+.navbar-brand img{
+    margin-right:5px;
+}
+.abstand-rechts {
+  margin-right: 30px; 
+}
+.user p{
+    line-height: 90px;
+    font-size: 16px;
+}
+.input-group{
+    margin: 5% 0;
+}
+
+.table tbody tr p{
+    word-wrap:break-word;
+    margin: 10px;
+}
+.table thead p{
+    line-height: 40px;
+}
+.table thead p:nth-child(1){
+    float:right;
+}
+.table{
+    background-color:#f9f9f9;
+}
+.chronik{
+    margin-top: 40px;
+}
+
+.well{
+    background-color: white;
+}
+
+
+
+

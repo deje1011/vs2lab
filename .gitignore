@@ -10,3 +10,7 @@ buildNumber.properties
 .classpath
 .project
 .settings
+
+.idea
+
+spring-web-demo/spring-web-demo.iml
