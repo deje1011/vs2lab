@@ -65,7 +65,7 @@ public class DataRepositoryImpl implements DataRepository{
 
 
     @Override
-    public void addUser(User user) {
+    public void registerUser(User user) {
 
         String id = String.valueOf(userid.incrementAndGet());
 

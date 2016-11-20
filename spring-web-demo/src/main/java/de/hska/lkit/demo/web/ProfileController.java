@@ -30,7 +30,7 @@ public class ProfileController {
         User user = new User();
         user.setName("marina");
         user.setPassword("xyz");
-        dataRepository.addUser(user);
+        dataRepository.registerUser(user);
         Map<Object, Object> users = dataRepository.getAllUsers();
         for( Map.Entry e : users.entrySet()){
             User u = (User) e.getValue();

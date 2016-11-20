@@ -13,8 +13,8 @@ public class User implements Serializable {
     private String id;
     private String name;
     private String password;
-    private Set follows;
-    private Set<String> followedBy;
+    private Set<String> follows;
+    private Set<String> followed;
     private List<Post> posts;
     private String image;
     private String session;
@@ -52,11 +52,11 @@ public class User implements Serializable {
     }
 
     public Set<String> getFollowedBy() {
-        return followedBy;
+        return followed;
     }
 
     public void setFollowedBy(Set<String> followedBy) {
-        this.followedBy = followedBy;
+        this.followed = followedBy;
     }
 
     public List<Post> getPosts() {

@@ -1,12 +1,13 @@
 package de.hska.lkit.demo.web.data.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  *
  * Created by Marina on 20.11.2016.
  */
-public class Post {
+public class Post implements Serializable{
 
     private String id;
     private String message;
