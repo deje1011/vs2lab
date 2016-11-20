@@ -2,6 +2,8 @@ package de.hska.lkit.demo.web.data.repo;
 
 import de.hska.lkit.demo.web.data.model.User;
 
+import java.util.Map;
+
 /**
  * Interface to specify interactions with database.
  *
@@ -29,4 +31,10 @@ public interface DataRepository {
      * @return id of user as string
      */
     public String getUserId(String name);
+
+    /**
+     * Returns a map of all users.
+     * @return users
+     */
+    public Map<Object, Object> getAllUsers();
 }

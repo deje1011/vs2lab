@@ -1,5 +1,6 @@
 package de.hska.lkit.demo.web.data.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
@@ -7,7 +8,7 @@ import java.util.Set;
  *
  * Created by Marina on 20.11.2016.
  */
-public class User {
+public class User implements Serializable {
 
     private String id;
     private String name;
