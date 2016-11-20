@@ -1,5 +1,6 @@
 package de.hska.lkit.demo.web.data.repo;
 
+import de.hska.lkit.demo.web.data.model.Post;
 import de.hska.lkit.demo.web.data.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Implements the DataRepository interface.
@@ -93,8 +95,53 @@ public class DataRepositoryImpl implements DataRepository{
     }
 
     @Override
-    public Map<Object, Object> getAllUsers(){
+    public Set<User> getAllUsers(){
         Map<Object, Object> users = redisHashOperations.entries("all-users");
-        return users;
+        return null;
+    }
+
+    @Override
+    public boolean isUserNameValid(String name) {
+        return false;
+    }
+
+    @Override
+    public User getUserById(String id) {
+        return null;
+    }
+
+    @Override
+    public Set<User> getAllFollowers(String id) {
+        return null;
+    }
+
+    @Override
+    public Set<User> getAllFollowed(String id) {
+        return null;
+    }
+
+    @Override
+    public void addFollower(String currentUserId, String userToFollowId) {
+
+    }
+
+    @Override
+    public void removeFollower(String currentUserId, String userToUnfollow) {
+
+    }
+
+    @Override
+    public Set<Post> getAllGlobalPosts() {
+        return null;
+    }
+
+    @Override
+    public Set<Post> getTimelinePosts(String id) {
+        return null;
+    }
+
+    @Override
+    public void addPost(String id) {
+
     }
 }
