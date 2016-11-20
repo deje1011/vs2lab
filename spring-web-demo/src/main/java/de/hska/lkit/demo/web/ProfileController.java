@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by jessedesaever on 24.10.16.
@@ -31,13 +32,21 @@ public class ProfileController {
         user.setName("marina");
         user.setPassword("xyz");
         dataRepository.registerUser(user);
-        Map<Object, Object> users = dataRepository.getAllUsers();
+     /*   Map<Object, Object> users = dataRepository.getAllUsers();
         for( Map.Entry e : users.entrySet()){
             User u = (User) e.getValue();
             System.out.print("\n output: " + u.getName());
+        }*/
+
+        Set<String> users = dataRepository.getAllUsers();
+        for(String u : users){
+            System.out.print("\n user:id " + u);
+            User userNew = dataRepository.getUserById(u);
+            System.out.print("\n user:name " + userNew.getName());
+            System.out.print("\n user:password " + userNew.getPassword() + "\n");
         }
+
         String string = dataRepository.getUserId("marina");
-        System.out.print("\n output: " + string);
 
         return "profile";
     }

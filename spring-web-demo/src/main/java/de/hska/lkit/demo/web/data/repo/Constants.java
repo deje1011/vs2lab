@@ -20,7 +20,7 @@ public class Constants {
     public static final String POST_KEY_PREFIX = "post:";
 
     public static final String KEY_SUFFIX_MESSAGE = "message";
-    public static final String KEY_SUFFIx_USER = "user";
+    public static final String KEY_SUFFIX_USER = "user";
     public static final String KEY_SUFFIX_TIME = "time";
-    
+
 }

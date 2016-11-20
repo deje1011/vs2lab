@@ -2,6 +2,7 @@ package de.hska.lkit.demo.web.data.repo;
 
 import de.hska.lkit.demo.web.data.model.Post;
 import de.hska.lkit.demo.web.data.model.User;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -40,10 +41,10 @@ public interface DataRepository {
     String getUserId(String name);
 
     /**
-     * Returns a sorted set of all users.
+     * Returns a set of all user ids.
      * @return users
      */
-    Set<User> getAllUsers();
+    Set<String> getAllUsers();
 
     /**
      * Returns user with the given id.
@@ -53,18 +54,18 @@ public interface DataRepository {
     User getUserById(String id);
 
     /**
-     * Returns a set of followers of a certain user.
+     * Returns a set of user ids followers of a certain user.
      * @param id id of user
      * @return followers of user
      */
-    Set<User> getAllFollowers(String id);
+    Set<String> getAllFollowers(String id);
 
     /**
-     * Returns a set of followed by certain user.
+     * Returns a set of user ids followed by certain user.
      * @param id id of user
      * @return followed by user
      */
-    Set<User> getAllFollowed(String id);
+    Set<String> getAllFollowed(String id);
 
     /**
      * Adds the current user to the set of followers of a certain user
@@ -83,17 +84,17 @@ public interface DataRepository {
     void removeFollower(String currentUserId, String userToUnfollow);
 
     /**
-     * Returns a sorted set of all global posts
+     * Returns a set of all global post ids.
      * @return set of all global posts
      */
-    Set<Post> getAllGlobalPosts();
+    Set<String> getAllGlobalPosts();
 
     /**
-     * Return a sorted set of all timeline posts of a certain user.
+     * Return a set of all timeline post ids of a certain user.
      * @param id id of user
      * @return set of posts
      */
-    Set<Post> getTimelinePosts(String id);
+    Set<String> getTimelinePosts(String id);
 
     /**
      * Adds a post to the timeline set of a certain user.
