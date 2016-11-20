@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 
+ *
  * Created by Marina on 20.11.2016.
  */
 public class User {
