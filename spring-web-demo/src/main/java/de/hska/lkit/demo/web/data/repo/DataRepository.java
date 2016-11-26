@@ -21,9 +21,9 @@ public interface DataRepository {
     /**
      * Checks if username has already been taken.
      * @param name name to validate
-     * @return true if name is avaliable
+     * @return true if name is unique
      */
-    boolean isUserNameValid(String name);
+    boolean isUserNameUnique(String name);
 
     /**
      * Compares passwords.
@@ -100,7 +100,15 @@ public interface DataRepository {
      * Adds a post to the timeline set of a certain user.
      * Adds a post to the timeline sets of all followers.
      * Adds a post to the global posts set.
-     * @param id id of user.
+     * @param post post to add.
      */
-    void addPost(String id);
+    void addPost(Post post);
+
+
+    /**
+     * Returns post with the given id.
+     * @param id id of post
+     * @return certain post
+     */
+    Post getPostById(String id);
  }

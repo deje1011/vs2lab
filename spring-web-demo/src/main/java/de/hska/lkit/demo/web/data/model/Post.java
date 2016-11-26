@@ -14,7 +14,12 @@ public class Post implements Serializable{
     private User user;
     private Date time;
 
+    public Post(User user, String message, Date time){
+        this.message = message;
+        this.user = user;
+        this.time = time;
 
+    }
     public String getId() {
         return id;
     }

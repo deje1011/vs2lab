@@ -1,5 +1,6 @@
 package de.hska.lkit.demo.web.data.repo;
 
+import com.sun.org.apache.xml.internal.security.keys.KeyUtils;
 import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import de.hska.lkit.demo.web.data.model.Post;
 import de.hska.lkit.demo.web.data.model.User;
@@ -10,6 +11,7 @@ import org.springframework.data.redis.support.atomic.RedisAtomicLong;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,7 +21,7 @@ import java.util.Set;
  * Created by Marina on 20.11.2016.
  */
 @Repository
-public class DataRepositoryImpl implements DataRepository{
+public class DataRepositoryImpl implements DataRepository {
 
     /**
      * to generate unique ids for user
@@ -38,12 +40,12 @@ public class DataRepositoryImpl implements DataRepository{
     /**
      * to save user data as object
      */
-    private RedisTemplate<String,User> redisTemplate;
+    private RedisTemplate<String, User> redisTemplate;
 
     /**
      * hash operations for stringRedisTemplate
      */
-    private HashOperations<String,String,String> stringHashOperations;
+    private HashOperations<String, String, String> stringHashOperations;
 
     private SetOperations<String, String> setOperations;
 
@@ -55,15 +57,16 @@ public class DataRepositoryImpl implements DataRepository{
 
 
     @Autowired
-    public DataRepositoryImpl(RedisTemplate<String, User> redisTemplate, StringRedisTemplate stringRedisTemplate){
+    public DataRepositoryImpl(RedisTemplate<String, User> redisTemplate, StringRedisTemplate stringRedisTemplate) {
 
         this.redisTemplate = redisTemplate;
         this.stringRedisTemplate = stringRedisTemplate;
         this.userId = new RedisAtomicLong("userid", stringRedisTemplate.getConnectionFactory());
+        this.postId = new RedisAtomicLong("postid", stringRedisTemplate.getConnectionFactory());
     }
 
     @PostConstruct
-    private void init(){
+    private void init() {
         stringHashOperations = stringRedisTemplate.opsForHash();
         setOperations = stringRedisTemplate.opsForSet();
         redisHashOperations = redisTemplate.opsForHash();
@@ -79,10 +82,10 @@ public class DataRepositoryImpl implements DataRepository{
 
         user.setId(id);
 
-        String key= Constants.USER_KEY_PREFIX + user.getId();
-        stringHashOperations.put(key,Constants.KEY_SUFFIX_ID, user.getId());
-        stringHashOperations.put(key,Constants.KEY_SUFFIX_NAME, user.getName());
-        stringHashOperations.put(key,Constants.KEY_SUFFIX_PASSWORD, user.getPassword());
+        String key = Constants.USER_KEY_PREFIX + user.getId();
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, user.getId());
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_NAME, user.getName());
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_PASSWORD, user.getPassword());
         stringHashOperations.put(Constants.USER_KEY_PREFIX + user.getName(), Constants.KEY_SUFFIX_ID, user.getId());
 
         setOperations.add(Constants.KEY_GET_ALL_USERS, user.getId());
@@ -91,9 +94,22 @@ public class DataRepositoryImpl implements DataRepository{
 
     @Override
     public boolean isPasswordValid(String name, String password) {
-        return false;
-    }
 
+        if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + name)) {
+
+            String id = getUserId(name);
+            String redisPassword = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_PASSWORD);
+
+            if (redisPassword.equals(password)) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } else {
+            return false;
+        }
+    }
 
 
     @Override
@@ -104,46 +120,50 @@ public class DataRepositoryImpl implements DataRepository{
     }
 
 
-
     @Override
-    public Set<String> getAllUsers(){
-      //  Map<Object,Object> users = redisHashOperations.entries(Constants.KEY_GET_ALL_USERS);
+    public Set<String> getAllUsers() {
+        //  Map<Object,Object> users = redisHashOperations.entries(Constants.KEY_GET_ALL_USERS);
         Set<String> users = setOperations.members(Constants.KEY_GET_ALL_USERS);
         return users;
     }
 
 
     @Override
-    public boolean isUserNameValid(String name) {
-        Map<Object,Object> users = redisHashOperations.entries(Constants.KEY_GET_ALL_USERS);
-
-        return false;
+    public boolean isUserNameUnique(String name) {
+        if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + name)) {
+            return false;
+        }else {
+            return true;
+        }
     }
 
 
     @Override
     public User getUserById(String id) {
 
-        User user = new User();
+        if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + id)) {
 
-        user.setId(id);
-        user.setName(stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_NAME));
-        user.setPassword(stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_PASSWORD));
-
-        return user;
-    }
-
-
-    @Override
-    public  Map<Object,Object> getAllFollowers(String id) {
+            String name = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_NAME);
+            String password = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_PASSWORD);
+            User user = new User(name, password);
+            user.setId(id);
+            return user;
+        }
         return null;
     }
 
 
     @Override
-    public  Map<Object,Object> getAllFollowed(String id) {
+    public Set<String> getAllFollowers(String id) {
         return null;
     }
+
+
+    @Override
+    public Set<String> getAllFollowed(String id) {
+        return null;
+    }
+
 
     @Override
     public void addFollower(String currentUserId, String userToFollowId) {
@@ -156,17 +176,59 @@ public class DataRepositoryImpl implements DataRepository{
     }
 
     @Override
-    public  Map<Object,Object> getAllGlobalPosts() {
+    public Set<String> getAllGlobalPosts() {
+
+        Set<String> posts = setOperations.members(Constants.KEY_GET_ALL_GLOBAL_POSTS);
+        return posts;
+    }
+
+    @Override
+    public Set<String> getTimelinePosts(String id) {
         return null;
     }
 
     @Override
-    public  Map<Object,Object> getTimelinePosts(String id) {
-        return null;
+    public void addPost(Post post) {
+
+        String id = String.valueOf(postId.incrementAndGet());
+
+        post.setId(id);
+
+        String key = Constants.POST_KEY_PREFIX + post.getId();
+       // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUser().getId());
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
+
+
+
+        //add post to users post list
+
+        //add post to posts of followers
+
+        //add post to global post list
+        setOperations.add(Constants.KEY_GET_ALL_GLOBAL_POSTS, post.getId());
     }
 
     @Override
-    public void addPost(String id) {
+    public Post getPostById(String id) {
 
+        if (stringRedisTemplate.hasKey(Constants.POST_KEY_PREFIX + id)) {
+
+            String userId = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_USER);
+            User user = getUserById(userId);
+            String message = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_MESSAGE);
+            String timeString = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_TIME);
+            Date time = new Date();
+            if(timeString!=null) {
+                time = new Date();
+
+            }
+            Post post = new Post(user, message,time);
+            post.setId(id);
+            return post;
+        }
+
+        return null;
     }
 }

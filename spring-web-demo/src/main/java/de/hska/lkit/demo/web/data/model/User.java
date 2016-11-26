@@ -19,6 +19,11 @@ public class User implements Serializable {
     private String image;
     private String session;
 
+    public User(String name, String password){
+        this.name = name;
+        this.password = password;
+    }
+
     public String getId() {
         return id;
     }
