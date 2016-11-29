@@ -1,8 +1,8 @@
 package de.hska.lkit.demo.web.data.repo;
 
 import de.hska.lkit.demo.web.data.model.Post;
-import de.hska.lkit.demo.web.data.model.User;
-import java.util.Map;
+import de.hska.lkit.demo.web.data.model.Userx;
+
 import java.util.Set;
 
 /**
@@ -16,7 +16,7 @@ public interface DataRepository {
      * Adds user to db.
      * @param user user to add
      */
-    void registerUser(User user);
+    void registerUser(Userx user);
 
     /**
      * Checks if username has already been taken.
@@ -44,14 +44,14 @@ public interface DataRepository {
      * Returns a set of all user ids.
      * @return users
      */
-    Set<User> getAllUsers();
+    Set<String> getAllUsers();
 
     /**
      * Returns user with the given id.
      * @param id id of user
      * @return certain user
      */
-    User getUserById(String id);
+    Userx getUserById(String id);
 
     /**
      * Returns a set of user ids followers of a certain user.

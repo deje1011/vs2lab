@@ -1,7 +1,8 @@
 package de.hska.lkit.demo.web.data;
 
 import de.hska.lkit.demo.web.data.model.Post;
-import de.hska.lkit.demo.web.data.model.User;
+
+import de.hska.lkit.demo.web.data.model.Userx;
 import de.hska.lkit.demo.web.data.repo.DataRepository;
 
 import java.time.Instant;
@@ -15,7 +16,7 @@ import java.util.Set;
  */
 public class TestData {
 
-    private ArrayList<User> mUsers = new ArrayList<>();
+    private ArrayList<Userx> mUsers = new ArrayList<>();
     private ArrayList<Post> mPosts = new ArrayList<>();
     private DataRepository mRepository;
 
@@ -24,6 +25,15 @@ public class TestData {
         addUsersToList();
         registerUsersToDatabase();
         printAllUsers();
+
+        Set<String> users = mRepository.getAllUsers();
+
+        for(String u : users) {
+
+                addPostForUser(u);
+                addPostForUser(u);
+
+        }
 
 
         //testIsPasswordValid(mUsers.get(0),mUsers.get(5));
@@ -69,17 +79,26 @@ public class TestData {
     }
 
     private void printAllUsers(){
-        Set<User> users = mRepository.getAllUsers();
-        for(User u : users){
+        Set<String> users = mRepository.getAllUsers();
+        for(String u : users){
 
-            User userNew = mRepository.getUserById(u.getId());
-           // System.out.print("\n user:" + userNew.getName() + ":id " + u);
-            System.out.print("\n user:" + u +":name " + userNew.getName());
-           // System.out.print("\n user:" + u + ":password " + userNew.getPassword() + "\n");
+            Userx user = mRepository.getUserById(u);
+            System.out.print("\n user:" + user.getName() + ":id " + u);
+            System.out.print("\n user:" + u +":name " + user.getName());
+            System.out.print("\n user:" + u + ":password " + user.getPassword() + "\n");
+            Set<String> posts = user.getPosts();
+
+            if(posts != null) {
+                for (String post : posts) {
+                    Post p = mRepository.getPostById(post);
+                    System.out.print("\n user:" + u + ":posts:" + p.getId() + ":" + p.getMessage());
+                }
+            }
+            System.out.print("\n ");
         }
  /*   Map<Object, Object> users = dataRepository.getAllUsers();
         for( Map.Entry e : users.entrySet()){
-            User u = (User) e.getValue();
+            UserNew u = (UserNew) e.getValue();
             System.out.print("\n output: " + u.getName());
         }*/
 
@@ -89,7 +108,7 @@ public class TestData {
 
     private void registerUsersToDatabase(){
 
-        for(User user: mUsers){
+        for(Userx user: mUsers){
            // if(mRepository.isUserNameUnique(user.getName())) {
                 mRepository.registerUser(user);
            // }
@@ -112,18 +131,24 @@ public class TestData {
 
     }
 
+    private void addPostForUser(String userid){
+
+        mRepository.addPost(new Post(mRepository.getUserById(userid), "This is a message from user: " + userid, Date.from(Instant.now())));
+
+    }
+
 
     private void addUsersToList(){
 
-        mUsers.add(new User("tim", "shdfjkj"));
-        mUsers.add(new User("lukas", "serger"));
-        mUsers.add(new User("tom", "gjkjh"));
-        mUsers.add(new User("hans", "fgjgkhjkhj"));
-        mUsers.add(new User("peter", "adfgfd"));
-        mUsers.add(new User("lisa", "wererztz"));
-        mUsers.add(new User("hanna", "yyxvcfnd"));
-        mUsers.add(new User("kim", "djghkhj"));
-        mUsers.add(new User("andreas", "dfgutghfg"));
+        mUsers.add(new Userx("tim", "shdfjkj"));
+        mUsers.add(new Userx("lukas", "serger"));
+        mUsers.add(new Userx("tom", "gjkjh"));
+        mUsers.add(new Userx("hans", "fgjgkhjkhj"));
+        mUsers.add(new Userx("peter", "adfgfd"));
+        mUsers.add(new Userx("lisa", "wererztz"));
+        mUsers.add(new Userx("hanna", "yyxvcfnd"));
+        mUsers.add(new Userx("kim", "djghkhj"));
+        mUsers.add(new Userx("andreas", "dfgutghfg"));
 
 
     }

@@ -18,6 +18,7 @@ public class Constants {
     public static final String KEY_SUFFIX_PASSWORD = "password";
     public static final String KEY_SUFFIX_SESSION = "session";
     public static final String KEY_SUFFIX_IMAGE = "image";
+    public static final String KEY_SUFFIX_POSTS = "posts";
 
     public static final String POST_KEY_PREFIX = "post:";
 

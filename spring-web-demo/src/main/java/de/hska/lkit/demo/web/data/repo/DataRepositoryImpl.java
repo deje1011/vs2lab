@@ -1,20 +1,15 @@
 package de.hska.lkit.demo.web.data.repo;
 
-import com.sun.org.apache.xml.internal.security.keys.KeyUtils;
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.Intercepter;
 import de.hska.lkit.demo.web.data.model.Post;
-import de.hska.lkit.demo.web.data.model.User;
+
+import de.hska.lkit.demo.web.data.model.Userx;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.support.atomic.RedisAtomicLong;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Implements the DataRepository interface.
@@ -41,9 +36,9 @@ public class DataRepositoryImpl implements DataRepository {
     /**
      * to save user data as object
      */
-    private RedisTemplate<String, User> redisTemplate;
+    private RedisTemplate<String, String> redisTemplateUser;
 
-    private RedisTemplate<String, String> redisTemplatePost;
+    private RedisTemplate<String, String> redisTemplateString;
 
     /**
      * hash operations for stringRedisTemplate
@@ -52,9 +47,8 @@ public class DataRepositoryImpl implements DataRepository {
 
     private SetOperations<String, String> setOperations;
 
-    private SetOperations<String, User> setOperationsUser;
 
-    private ZSetOperations<String, User> zSetOperationsUser;
+    private ZSetOperations<String, String> zSetOperationsUser;
 
     private ZSetOperations<String, String> zSetOperationsPost;
 
@@ -62,11 +56,11 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Autowired
-    public DataRepositoryImpl(RedisTemplate<String, User> redisTemplate, RedisTemplate<String, String> redisTemplatePost, StringRedisTemplate stringRedisTemplate) {
+    public DataRepositoryImpl(RedisTemplate<String, String> redisTemplate, RedisTemplate<String, String> redisTemplateString, StringRedisTemplate stringRedisTemplate) {
 
-        this.redisTemplate = redisTemplate;
+        this.redisTemplateUser = redisTemplate;
         this.stringRedisTemplate = stringRedisTemplate;
-        this.redisTemplatePost = redisTemplatePost;
+        this.redisTemplateString = redisTemplateString;
         this.userId = new RedisAtomicLong("userid", stringRedisTemplate.getConnectionFactory());
         this.postId = new RedisAtomicLong("postid", stringRedisTemplate.getConnectionFactory());
     }
@@ -75,15 +69,14 @@ public class DataRepositoryImpl implements DataRepository {
     private void init() {
         stringHashOperations = stringRedisTemplate.opsForHash();
         setOperations = stringRedisTemplate.opsForSet();
-        redisHashOperations = redisTemplate.opsForHash();
-        zSetOperationsUser = redisTemplate.opsForZSet();
-        setOperationsUser = redisTemplate.opsForSet();
-        zSetOperationsPost = redisTemplatePost.opsForZSet();
+        redisHashOperations = redisTemplateUser.opsForHash();
+        zSetOperationsUser = redisTemplateUser.opsForZSet();
+        zSetOperationsPost = redisTemplateString.opsForZSet();
     }
 
 
     @Override
-    public void registerUser(User user) {
+    public void registerUser(Userx user) {
 
         String id = String.valueOf(userId.incrementAndGet());
 
@@ -113,7 +106,7 @@ public class DataRepositoryImpl implements DataRepository {
                 scorekey += user.getName().charAt(i);
             }
         }
-        zSetOperationsUser.add(Constants.KEY_GET_ALL_USERS_2, user,scorekey);
+        zSetOperationsUser.add(Constants.KEY_GET_ALL_USERS_2, user.getId(),scorekey);
     }
 
 
@@ -146,11 +139,11 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Override
-    public Set<User> getAllUsers() {
+    public Set<String> getAllUsers() {
         //  Map<Object,Object> users = redisHashOperations.entries(Constants.KEY_GET_ALL_USERS);
         Set<String> users = setOperations.members(Constants.KEY_GET_ALL_USERS);
 
-        Set<User> user = zSetOperationsUser.range(Constants.KEY_GET_ALL_USERS_2, (long)0, zSetOperationsUser.size(Constants.KEY_GET_ALL_USERS_2));
+        Set<String> user = zSetOperationsUser.range(Constants.KEY_GET_ALL_USERS_2, (long)0, zSetOperationsUser.size(Constants.KEY_GET_ALL_USERS_2));
 
         return user;
     }
@@ -167,14 +160,16 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Override
-    public User getUserById(String id) {
+    public Userx getUserById(String id) {
 
         if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + id)) {
 
             String name = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_NAME);
             String password = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_PASSWORD);
-            User user = new User(name, password);
+            Set posts = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_POSTS);
+            Userx user = new Userx(name, password);
             user.setId(id);
+            user.setPosts(posts);
             return user;
         }
         return null;
@@ -232,13 +227,14 @@ public class DataRepositoryImpl implements DataRepository {
 
 
 
-        //add post to users post list
+        ////add post to users post list
+        String userPostsKey = Constants.USER_KEY_PREFIX + post.getUser().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
+        setOperations.add(userPostsKey, post.getId());
 
-        //add post to posts of followers
 
-        //add post to global post list
+        ////add post to global post list
+
         //setOperations.add(Constants.KEY_GET_ALL_GLOBAL_POSTS, post.getId());
-
 
         String score = Integer.toString(post.getTime().getYear()) + Integer.toString(post.getTime().getMonth())
                 + Integer.toString(post.getTime().getDay()) + Integer.toString(post.getTime().getHours())
@@ -257,7 +253,7 @@ public class DataRepositoryImpl implements DataRepository {
         if (stringRedisTemplate.hasKey(Constants.POST_KEY_PREFIX + id)) {
 
             String userId = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_USER);
-            User user = getUserById(userId);
+            Userx user = getUserById(userId);
             String message = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_MESSAGE);
             String timeString = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_TIME);
             Date time = new Date();
