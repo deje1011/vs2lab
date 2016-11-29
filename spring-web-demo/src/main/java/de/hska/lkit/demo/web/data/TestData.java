@@ -23,18 +23,16 @@ public class TestData {
     public void testDataBaseMethods(DataRepository repository){
         mRepository = repository;
         addUsersToList();
-        registerUsersToDatabase();
-        printAllUsers();
+        //registerUsersToDatabase();
+
 
         Set<String> users = mRepository.getAllUsers();
 
-        for(String u : users) {
 
-                addPostForUser(u);
-                addPostForUser(u);
+        mRepository.addFollower("115", "128");
+        Userx user = mRepository.getUserById("115");
 
-        }
-
+        printAllTimelinePosts("115");
 
         //testIsPasswordValid(mUsers.get(0),mUsers.get(5));
         //testIsUserNameUnique("lukas");
@@ -52,6 +50,35 @@ public class TestData {
 
 
 
+    }
+
+    private void printAllTimelinePosts(String userid){
+
+        Set<String> posts = mRepository.getTimelinePosts(userid);
+
+        for(String post: posts){
+
+            Post p = mRepository.getPostById(post);
+            System.out.print("\nPost Conent: " + p.getMessage());
+        }
+
+    }
+    private void printAllFollowers(String userId){
+
+        Set<String> followers = mRepository.getAllFollowers(userId);
+
+        for(String follower: followers){
+            System.out.print("\n Der User: " + userId + " folgt: " + follower );
+        }
+    }
+
+    private void printAllFollowed(String userId){
+
+        Set<String> followers = mRepository.getAllFollowed(userId);
+
+        for(String follower: followers){
+            System.out.print("\n Dem User: " + userId + " folgt: " + follower );
+        }
     }
 
     private void printAllPosts(){
@@ -86,24 +113,39 @@ public class TestData {
             System.out.print("\n user:" + user.getName() + ":id " + u);
             System.out.print("\n user:" + u +":name " + user.getName());
             System.out.print("\n user:" + u + ":password " + user.getPassword() + "\n");
-            Set<String> posts = user.getPosts();
+            Set<String> follows = user.getFollows();
+
+            if(follows != null) {
+                for (String follow : follows) {
+                    Userx p = mRepository.getUserById(follow);
+                    System.out.print("\n user:" + u + ":follows:" + p.getId() + ":" + p.getName());
+                }
+            }
+
+            Set<String> followedBy = user.getFollowed();
+
+            if(followedBy != null) {
+                for (String follow : followedBy) {
+                    Userx p = mRepository.getUserById(follow);
+                    System.out.print("\n user:" + u + ":followedBy:" + p.getId() + ":" + p.getName());
+                }
+            }
+
+
+
+
+
+
+           /* Set<String> posts = user.getPosts();
 
             if(posts != null) {
                 for (String post : posts) {
                     Post p = mRepository.getPostById(post);
                     System.out.print("\n user:" + u + ":posts:" + p.getId() + ":" + p.getMessage());
                 }
-            }
+            }*/
             System.out.print("\n ");
         }
- /*   Map<Object, Object> users = dataRepository.getAllUsers();
-        for( Map.Entry e : users.entrySet()){
-            UserNew u = (UserNew) e.getValue();
-            System.out.print("\n output: " + u.getName());
-        }*/
-
-
-
     }
 
     private void registerUsersToDatabase(){

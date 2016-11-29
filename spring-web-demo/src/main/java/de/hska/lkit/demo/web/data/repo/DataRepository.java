@@ -55,17 +55,17 @@ public interface DataRepository {
 
     /**
      * Returns a set of user ids followers of a certain user.
-     * @param id id of user
+     * @param userId id of user
      * @return followers of user
      */
-    Set<String> getAllFollowers(String id);
+    Set<String> getAllFollowers(String userId);
 
     /**
      * Returns a set of user ids followed by certain user.
-     * @param id id of user
+     * @param userId id of user
      * @return followed by user
      */
-    Set<String> getAllFollowed(String id);
+    Set<String> getAllFollowed(String userId);
 
     /**
      * Adds the current user to the set of followers of a certain user

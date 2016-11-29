@@ -19,6 +19,9 @@ public class Constants {
     public static final String KEY_SUFFIX_SESSION = "session";
     public static final String KEY_SUFFIX_IMAGE = "image";
     public static final String KEY_SUFFIX_POSTS = "posts";
+    public static final String KEY_SUFFIX_FOLLOWS = "follows";
+    public static final String KEY_SUFFIX_FOLLOWED_BY = "followedby";
+    public static final String KEY_SUFFIX_TIMELINE_POSTS = "timelineposts";
 
     public static final String POST_KEY_PREFIX = "post:";
 
