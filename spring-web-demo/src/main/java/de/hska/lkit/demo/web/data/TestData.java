@@ -22,17 +22,23 @@ public class TestData {
     public void testDataBaseMethods(DataRepository repository){
         mRepository = repository;
         addUsersToList();
-        //registerUsersToDatabase();
-        //printAllUsers();
+        registerUsersToDatabase();
+        printAllUsers();
+
+
         //testIsPasswordValid(mUsers.get(0),mUsers.get(5));
         //testIsUserNameUnique("lukas");
 
-        addPostsToList();
+     /*   addPostsToList();
 
         for(Post post: mPosts){
             mRepository.addPost(post);
         }
         printAllPosts();
+
+        */
+
+
 
 
 
@@ -63,13 +69,13 @@ public class TestData {
     }
 
     private void printAllUsers(){
-        Set<String> users = mRepository.getAllUsers();
-        for(String u : users){
+        Set<User> users = mRepository.getAllUsers();
+        for(User u : users){
 
-            User userNew = mRepository.getUserById(u);
-            System.out.print("\n user:" + userNew.getName() + ":id " + u);
+            User userNew = mRepository.getUserById(u.getId());
+           // System.out.print("\n user:" + userNew.getName() + ":id " + u);
             System.out.print("\n user:" + u +":name " + userNew.getName());
-            System.out.print("\n user:" + u + ":password " + userNew.getPassword() + "\n");
+           // System.out.print("\n user:" + u + ":password " + userNew.getPassword() + "\n");
         }
  /*   Map<Object, Object> users = dataRepository.getAllUsers();
         for( Map.Entry e : users.entrySet()){
@@ -84,7 +90,9 @@ public class TestData {
     private void registerUsersToDatabase(){
 
         for(User user: mUsers){
-            mRepository.registerUser(user);
+           // if(mRepository.isUserNameUnique(user.getName())) {
+                mRepository.registerUser(user);
+           // }
         }
     }
 

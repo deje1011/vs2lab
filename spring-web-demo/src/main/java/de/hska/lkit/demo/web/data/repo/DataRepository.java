@@ -44,7 +44,7 @@ public interface DataRepository {
      * Returns a set of all user ids.
      * @return users
      */
-    Set<String> getAllUsers();
+    Set<User> getAllUsers();
 
     /**
      * Returns user with the given id.

@@ -7,7 +7,9 @@ package de.hska.lkit.demo.web.data.repo;
 public class Constants {
 
     public static final String KEY_GET_ALL_USERS = "get_all_users";
+    public static final String KEY_GET_ALL_USERS_2 = "get_all_users_2";
     public static final String KEY_GET_ALL_GLOBAL_POSTS = "get_all_global_posts";
+    public static final String KEY_GET_ALL_GLOBAL_POSTS_2 = "get_all_global_posts_2";
 
     public static final String USER_KEY_PREFIX = "user:";
 
