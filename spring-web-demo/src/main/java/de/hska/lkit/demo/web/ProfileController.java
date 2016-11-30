@@ -25,9 +25,6 @@ public class ProfileController {
     @RequestMapping(value = "/profile")
     public String deliverTimelineTemplate() {
 
-        TestData data = new TestData();
-        data.testDataBaseMethods(dataRepository);
-
         return "profile";
     }
 }
