@@ -81,10 +81,14 @@
         }
         $createPostInput.val('');
         return $.ajax({
+            contentType: 'application/json',
             url: 'api/users/1/timeline/posts',
             method: 'POST',
             data: content
-        }).then(rerender).fail(function () {
+        }).then(function () {
+            dataAdapter.reset();
+            virtualScroller.addRowAt({rowIndex: 0});
+        }).fail(function () {
             alert('Ups, that didn\'t work. Please try again.');
             $createPostInput.val(content);
         });
@@ -120,6 +124,54 @@
             alert('Ups, that didn\'t work. Please try again.');
             rerenderViewport();
         });
+
+    });
+
+
+
+    /*
+        Edit posts
+    */
+
+    $container.on('click', '.timeline-post-edit-button', function (event) {
+
+        event.preventDefault();
+        var $button = $(this);
+        var id = parseInt($button.closest('[timeline-post-id]').attr('timeline-post-id'));
+        var index = parseInt($button.closest('[virtual-scroller-index]').attr('virtual-scroller-index'));
+
+        $button
+            .closest('.timeline-post-body')
+            .find('.timeline-post-content')
+            .attr('contenteditable', 'true')
+            .addClass('form-control')
+            .focus()
+            .off('keydown')
+            .on('keydown', function (event) {
+
+                var keyCode = event.keyCode || event.which | 0;
+                if (keyCode === 13) {
+                    var newContent = $(this)
+                        .attr('contenteditable', 'false')
+                        .removeClass('form-control')
+                        .off('keydown')
+                        .text();
+
+                    virtualScroller.sizeChanged({rowIndex: index});
+
+                    return $.ajax({
+                        contentType: 'application/json',
+                        url: 'api/posts/' + id,
+                        method: 'PUT',
+                        data: newContent
+                    }).fail(function () {
+                        alert('Ups, that didn\'t work. Please try again.');
+                        rerenderViewport();
+                    });
+                }
+
+            });
+
 
     });
 

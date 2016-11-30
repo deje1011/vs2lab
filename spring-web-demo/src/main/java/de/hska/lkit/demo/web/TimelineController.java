@@ -40,7 +40,8 @@ public class TimelineController {
             this.posts.add(0, new Post(content));
         }
 
-        public void deletePost (String postId) {
+
+        public int indexOfPost (String postId) {
             int index = -1;
             int numberOfPosts = this.countTimelinePosts(""); // TODO: userId für Authorization
             for (int i = 0; i < numberOfPosts && index == -1; i++) {
@@ -49,10 +50,24 @@ public class TimelineController {
                     index = i;
                 }
             }
+            return index;
+        }
+
+        public void deletePost (String postId) {
+            int index = indexOfPost(postId);
             if (index != -1) {
                 this.posts.remove(index);
             }
         }
+
+        public void updatePost (String postId, String content) {
+            int index = indexOfPost(postId);
+            if (index != -1) {
+                this.posts.get(index).setContent(content);
+            }
+        }
+
+
 
         public int countTimelinePosts (String userId) {
             return this.posts.size();
@@ -92,11 +107,15 @@ public class TimelineController {
 
 
     @RequestMapping(value = "/api/posts/{postId}", method = RequestMethod.DELETE)
-    public @ResponseBody boolean createTimelinePostForUser (@PathVariable String postId) {
-        System.out.println("DELETE " + postId);
+    public @ResponseBody boolean deleteTimelinePostForUser (@PathVariable String postId) {
         this.database.deletePost(postId);
         return true;
     }
 
-    // TODO: PUT post (?)
+    @RequestMapping(value = "/api/posts/{postId}", method = RequestMethod.PUT)
+    public @ResponseBody boolean updateTimelinePostForUser (@PathVariable String postId, @RequestBody String content) {
+        this.database.updatePost(postId, content);
+        return true;
+    }
+
 }
