@@ -108,12 +108,90 @@ window.VirtualScroller = (function ($, _) {
     }());
 
     var RenderManager = function (config) {
-        var renderManager = {};
+
+        var renderManager = {
+            id: _.uniqueId()
+        };
         renderManager.state = {};
         renderManager.rowStates = []; // rowIndex => rowState
         renderManager.sizeCache = {
             rows: [],
             columns: []
+        };
+
+        // For items we need to know the outer boundries in order to calculate how many items
+        // fit into the container. However, for the container itself we want to use the inner boundries
+        // in order totake paddings into account.
+        var DETECT_ITEM_HEIGHT_FN = 'outerHeight';
+        var DETECT_ITEM_WIDTH_FN = 'outerWidth';
+        var DETECT_CONTAINER_HEIGHT_FN = 'height';
+        var DETECT_CONTAINER_WIDTH_FN = 'width';
+
+        var FOLLOW_X_CLASS = 'virtual-scroller-follow-x';
+        var FOLLOW_Y_CLASS = 'virtual-scroller-follow-y';
+        var FOLLOW_BOTH_CLASS = 'virtual-scroller-follow-both';
+
+        renderManager.stickyState = {};
+        renderManager.stickyRowStates = [];
+        renderManager.stickyColumnState = {};
+        renderManager.stickyColumnRowStates = [];
+        renderManager.fixedState = {};
+        renderManager.fixedRowStates = [];
+
+        /*
+            Set translation for class names instead of dom-elements, so other elements can hook in by
+            just adding the class name
+        */
+        var styleElement = $('<style>')
+            .attr('created-by-virtual-scroller', '')
+            .attr('inserted-by', 'virtualScroller:renderManager');
+        styleElement.appendTo(config.container);
+        var updateStyles = function (params) {
+            params = validateParameters(params, {
+                translateX: {type: 'number'},
+                translateY: {type: 'number'}
+            });
+            styleElement.text(
+                '.' + FOLLOW_X_CLASS + ' {' +
+                ' transform: translate3d(' + params.translateX + 'px, 0, 0);' +
+                '}' +
+                '.' + FOLLOW_Y_CLASS + ' {' +
+                ' transform: translate3d(0, ' + params.translateY + 'px, 0);' +
+                '}' +
+                '.' + FOLLOW_BOTH_CLASS + ' {' +
+                ' transform: translate3d(' + params.translateX + 'px, ' + params.translateY + 'px, 0);' +
+                '}'
+            );
+        };
+
+        config.canvas.addClass(FOLLOW_BOTH_CLASS);
+        config.stickyColumnsCanvas && config.stickyColumnsCanvas.addClass(FOLLOW_Y_CLASS);
+        config.stickyRowsCanvas && config.stickyRowsCanvas.addClass(FOLLOW_X_CLASS);
+
+        var removeFromDom = function (params) {
+            params = validateParameters(params, {
+                item: {type: 'object', customCheck: function (item) {
+                    return item instanceof jQuery;
+                }},
+                rowIndex: {type: 'number'},
+                columnIndex: {type: ['number', 'undefined'], default: undefined}
+            });
+            var shouldBeRemoved;
+            if (params.columnIndex === undefined) {
+                shouldBeRemoved = config.onBeforeRowRemoved({
+                    row: params.item,
+                    rowIndex: params.rowIndex
+                });
+            } else {
+                shouldBeRemoved = config.onBeforeColumnRemoved({
+                    column: params.item,
+                    rowIndex: params.rowIndex,
+                    columnIndex: params.columnIndex
+                });
+            }
+            if (shouldBeRemoved !== false) {
+                params.item.remove();
+            }
         };
 
         var howManyItemsFitIn = function (params) {
@@ -188,15 +266,17 @@ window.VirtualScroller = (function ($, _) {
                 the item size decreases. The browser keeps the scroll position and increases
                 the scrollWidth/scrollHeight of the container.
             */
-            params.scrollOffset = Math.max(0, params.scrollOffset);
-            params.scrollOffset = Math.min(
-                sumSizes({
-                    startIndex: 0,
-                    amount: params.itemCount,
-                    sizeCache: sizeCache,
-                    itemSize: params.itemSize
-                }) - params.containerSize,
-                params.scrollOffset
+            params.scrollOffset = Math.max(
+                0,
+                Math.min(
+                    sumSizes({
+                        startIndex: 0,
+                        amount: params.itemCount,
+                        sizeCache: sizeCache,
+                        itemSize: params.itemSize
+                    }) - params.containerSize,
+                    params.scrollOffset
+                )
             );
             params.preRender = params.preRender || 0;
 
@@ -260,8 +340,8 @@ window.VirtualScroller = (function ($, _) {
 
             if (params.dynamicItemSize) {
                 canvasSize = sumSizes({
-                    startIndex: numberOfItemsNotToRender,
-                    amount: params.itemCount - numberOfItemsNotToRender,
+                    startIndex: 0,
+                    amount: params.itemCount,
                     sizeCache: sizeCache,
                     itemSize: params.itemSize
                 });
@@ -272,7 +352,7 @@ window.VirtualScroller = (function ($, _) {
                     itemSize: params.itemSize
                 });
             } else {
-                canvasSize = (params.itemCount - numberOfItemsNotToRender) * params.itemSize
+                canvasSize = params.itemCount * params.itemSize
                 offset = numberOfItemsNotToRender * params.itemSize;
             }
 
@@ -312,7 +392,11 @@ window.VirtualScroller = (function ($, _) {
             };
         };
 
-        (function tests () {
+        (function updateStateTests () {
+
+            if (typeof window.describeFn === 'undefined') {
+                return;
+            }
 
             var defaultParams = {
                 oldState: {},
@@ -328,212 +412,223 @@ window.VirtualScroller = (function ($, _) {
                 }
             };
 
-            if (typeof window.testUtils !== 'undefined') {
-                testUtils.describeFn({
-                    fn: updateState,
-                    fnName: 'updateState',
-                    tests: {
-                        'correct state for initial call': {
-                            params: _.clone(defaultParams),
-                            transformResult: function (result) {
+            describeFn({
+                fn: updateState,
+                fnName: 'updateState',
+                tests: {
+                    'correct state for initial call': {
+                        params: _.clone(defaultParams),
+                        transformResult: function (result) {
+                            return {
+                                childrenCount: _.compact(result.state.children).length,
+                                offset: result.state.offset,
+                                canvasSize: result.state.canvasSize
+                            };
+                        },
+                        result: {
+                            equals: {
+                                childrenCount: 5,
+                                offset: 0,
+                                canvasSize: 2000
+                            }
+                        }
+                    },
+                    'correct state after scrolling': {
+                        params: _.extend(_.clone(defaultParams), {
+                            scrollOffset: 100
+                        }),
+                        transformResult: function (result) {
+                            return {
+                                childrenCount: _.compact(result.state.children).length,
+                                offset: result.state.offset,
+                                canvasSize: result.state.canvasSize
+                            };
+                        },
+                        result: {
+                            equals: {
+                                childrenCount: 5,
+                                offset: 100,
+                                canvasSize: 2000
+                            }
+                        }
+                    },
+                    'pre-renders the correct amount of items for the initial call': {
+                        params: _.extend(_.clone(defaultParams), {preRender: 2}),
+                        transformResult: function (result) {
+                            return _.compact(result.state.children).length;
+                        },
+                        result: {
+                            equals: 7
+                        }
+                    },
+                    'pre-renders the correct amount of items after scrolling': {
+                        params: _.extend(_.clone(defaultParams), {
+                            preRender: 2,
+                            scrollOffset: 100
+                        }),
+                        transformResult: function (result) {
+                            return _.compact(result.state.children).length;
+                        },
+                        result: {
+                            equals: 9
+                        }
+                    },
+                    'can handle dynamic item sizes for initial call': {
+                        params: _.extend(_.clone(defaultParams), {
+                            dynamicItemSize: true,
+                            renderItem: function (params) {
+                                var height = (params.index + 1) * 10;
                                 return {
-                                    childrenCount: _.compact(result.state.children).length,
-                                    offset: result.state.offset,
-                                    canvasSize: result.state.canvasSize
+                                    item: $('<div>').height(height),
+                                    size: height
+                                };
+                            }
+                        }),
+                        transformResult: function (result) {
+                            return {
+                                childrenCount: _.compact(result.state.children).length,
+                                offset: result.state.offset,
+                                canvasSize: result.state.canvasSize
+                            };
+                        },
+                        result: {
+                            equals: {
+                                /*
+                                    Even though, 4 items would be enough to fill the containerSize,
+                                    the scroller will render 5 items because he does not know anything
+                                    about the itemSize before rendering the items.
+                                    If we would pass in a heightCache with the correct heights already
+                                    set, the scroller would only render 4.
+                                */
+                                childrenCount: 5,
+                                offset: 0,
+                                canvasSize: (10 + 20 + 30 + 40 + 50) + (20 * 95) // 95 = itemSize * (itemCount - childrenCount)
+                            }
+                        }
+                    },
+                    'can handle dynamic item sizes after scrolling': {
+                        params: _.extend(_.clone(defaultParams), {
+                            dynamicItemSize: true,
+                            scrollOffset: 100,
+                            renderItem: function (params) {
+                                var height = (params.index + 1) * 10;
+                                return {
+                                    item: $('<div>').height(height),
+                                    size: height
+                                };
+                            }
+                        }),
+                        transformResult: function (result) {
+                            return {
+                                childrenCount: _.compact(result.state.children).length,
+                                offset: result.state.offset,
+                                canvasSize: result.state.canvasSize
+                            };
+                        },
+                        result: {
+                            equals: {
+                                /*
+                                    Even though, 2 items would be enough to fill the containerSize,
+                                    the scroller will render 5 items because he does not know anything
+                                    about the itemSize before rendering the items.
+                                    If we would pass in a heightCache with the correct heights already
+                                    set, the scroller would only render 2.
+                                */
+                                childrenCount: 5,
+                                offset: 100,
+                                canvasSize: (60 + 70 + 80 + 90 + 100) + (20 * 95) // 90 = itemSize * (itemCount - childrenCount)
+                            }
+                        }
+                    },
+                    'uses a given size cache': {
+                        params: _.extend(_.clone(defaultParams), {
+                            dynamicItemSize: true,
+                            renderItem: function (params) {
+                                var height = (params.index + 1) * 10;
+                                return {
+                                    item: $('<div>').height(height),
+                                    size: height
                                 };
                             },
-                            result: {
-                                equals: {
-                                    childrenCount: 5,
-                                    offset: 0,
-                                    canvasSize: 2000
-                                }
-                            }
+                            sizeCache: [10, 20, 30, 40, 50]
+                        }),
+                        transformResult: function (result) {
+                            return {
+                                childrenCount: _.compact(result.state.children).length,
+                                offset: result.state.offset,
+                                canvasSize: result.state.canvasSize
+                            };
                         },
-                        'correct state after scrolling': {
-                            params: _.extend(_.clone(defaultParams), {
-                                scrollOffset: 100
-                            }),
-                            transformResult: function (result) {
+                        result: {
+                            equals: {
+                                childrenCount: 4,
+                                offset: 0,
+                                canvasSize: (10 + 20 + 30 + 40 + 50) + (20 * 95) // 95 = itemSize * (itemCount - sizeCache.length)
+                            }
+                        }
+                    },
+                    // only for items that are rendered on top/on the left of the current items
+                    'adjust scrollOffset if a pre-rendered size is bigger than expected': {
+                        params: _.extend(_.clone(defaultParams), {
+                            dynamicItemSize: true,
+                            scrollOffset: 100,
+                            preRender: 1,
+                            renderItem: function (params) {
+                                var height = 30; // 10 more than itemSize
                                 return {
-                                    childrenCount: _.compact(result.state.children).length,
-                                    offset: result.state.offset,
-                                    canvasSize: result.state.canvasSize
+                                    item: $('<div>').height(height),
+                                    size: height
                                 };
                             },
-                            result: {
-                                equals: {
-                                    childrenCount: 5,
-                                    offset: 100,
-                                    canvasSize: 1900
-                                }
-                            }
+                            oldState: {scrollOffset: 100},
+                            sizeCache: [undefined, undefined, undefined, undefined, undefined,
+                            20, 20, 20, 20, 20]
+                        }),
+                        transformResult: function (result) {
+                            return {
+                                scrollOffset: result.state.scrollOffset,
+                                adjustedScrollOffsetBy: result.state.adjustedScrollOffsetBy
+                            };
                         },
-                        'pre-renders the correct amount of items for the initial call': {
-                            params: _.extend(_.clone(defaultParams), {preRender: 2}),
-                            transformResult: function (result) {
-                                return _.compact(result.state.children).length;
-                            },
-                            result: {
-                                equals: 7
-                            }
-                        },
-                        'pre-renders the correct amount of items after scrolling': {
-                            params: _.extend(_.clone(defaultParams), {
-                                preRender: 2,
-                                scrollOffset: 100
-                            }),
-                            transformResult: function (result) {
-                                return _.compact(result.state.children).length;
-                            },
-                            result: {
-                                equals: 9
-                            }
-                        },
-                        'can handle dynamic item sizes for initial call': {
-                            params: _.extend(_.clone(defaultParams), {
-                                dynamicItemSize: true,
-                                renderItem: function (params) {
-                                    var height = (params.index + 1) * 10;
-                                    return {
-                                        item: $('<div>').height(height),
-                                        size: height
-                                    };
-                                }
-                            }),
-                            transformResult: function (result) {
-                                return {
-                                    childrenCount: _.compact(result.state.children).length,
-                                    offset: result.state.offset,
-                                    canvasSize: result.state.canvasSize
-                                };
-                            },
-                            result: {
-                                equals: {
-                                    /*
-                                        Even though, 4 items would be enough to fill the containerSize,
-                                        the scroller will render 5 items because he does not know anything
-                                        about the itemSize before rendering the items.
-                                        If we would pass in a heightCache with the correct heights already
-                                        set, the scroller would only render 4.
-                                    */
-                                    childrenCount: 5,
-                                    offset: 0,
-                                    canvasSize: (10 + 20 + 30 + 40 + 50) + (20 * 95) // 95 = itemSize * (itemCount - childrenCount)
-                                }
-                            }
-                        },
-                        'can handle dynamic item sizes after scrolling': {
-                            params: _.extend(_.clone(defaultParams), {
-                                dynamicItemSize: true,
-                                scrollOffset: 100,
-                                renderItem: function (params) {
-                                    var height = (params.index + 1) * 10;
-                                    return {
-                                        item: $('<div>').height(height),
-                                        size: height
-                                    };
-                                }
-                            }),
-                            transformResult: function (result) {
-                                return {
-                                    childrenCount: _.compact(result.state.children).length,
-                                    offset: result.state.offset,
-                                    canvasSize: result.state.canvasSize
-                                };
-                            },
-                            result: {
-                                equals: {
-                                    /*
-                                        Even though, 2 items would be enough to fill the containerSize,
-                                        the scroller will render 5 items because he does not know anything
-                                        about the itemSize before rendering the items.
-                                        If we would pass in a heightCache with the correct heights already
-                                        set, the scroller would only render 2.
-                                    */
-                                    childrenCount: 5,
-                                    offset: 100,
-                                    canvasSize: (60 + 70 + 80 + 90 + 100) + (20 * 90) // 90 = itemSize * (itemCount - childrenCount - not rendered)
-                                }
-                            }
-                        },
-                        'uses a given size cache': {
-                            params: _.extend(_.clone(defaultParams), {
-                                dynamicItemSize: true,
-                                renderItem: function (params) {
-                                    var height = (params.index + 1) * 10;
-                                    return {
-                                        item: $('<div>').height(height),
-                                        size: height
-                                    };
-                                },
-                                sizeCache: [10, 20, 30, 40, 50]
-                            }),
-                            transformResult: function (result) {
-                                return {
-                                    childrenCount: _.compact(result.state.children).length,
-                                    offset: result.state.offset,
-                                    canvasSize: result.state.canvasSize
-                                };
-                            },
-                            result: {
-                                equals: {
-                                    childrenCount: 4,
-                                    offset: 0,
-                                    canvasSize: (10 + 20 + 30 + 40 + 50) + (20 * 95) // 95 = itemSize * (itemCount - sizeCache.length)
-                                }
-                            }
-                        },
-                        // only for items that are rendered on top/on the left of the current items
-                        'adjust scrollOffset if a pre-rendered size is bigger than expected': {
-                            params: _.extend(_.clone(defaultParams), {
-                                dynamicItemSize: true,
-                                scrollOffset: 100,
-                                preRender: 1,
-                                renderItem: function (params) {
-                                    var height = 30; // 10 more than itemSize
-                                    return {
-                                        item: $('<div>').height(height),
-                                        size: height
-                                    };
-                                },
-                                oldState: {scrollOffset: 100},
-                                sizeCache: [undefined, undefined, undefined, undefined, undefined,
-                                20, 20, 20, 20, 20]
-                            }),
-                            transformResult: function (result) {
-                                return {
-                                    scrollOffset: result.state.scrollOffset,
-                                    adjustedScrollOffsetBy: result.state.adjustedScrollOffsetBy
-                                };
-                            },
-                            result: {
-                                equals: {
-                                    scrollOffset: 110,
-                                    adjustedScrollOffsetBy: 10
-                                }
+                        result: {
+                            equals: {
+                                scrollOffset: 110,
+                                adjustedScrollOffsetBy: 10
                             }
                         }
                     }
-                }).then(function (results) {
-                    console.log(JSON.stringify(results, null, 2));
-                });
-            }
+                }
+            }).then(function (results) {
+                console.log(JSON.stringify(results, null, 2));
+            });
         }());
 
 
-        var renderChildren = function (canvas, newChildren, oldChildren) {
-            oldChildren = oldChildren || [];
-            var oldStartIndex = oldChildren.length - _.compact(oldChildren).length;
+        var renderChildren = function (params) {
 
+            params = validateParameters(params, {
+                canvas: {type: 'object'},
+                newChildren: {type: 'array'},
+                oldChildren: {type: 'array', default: []},
+                /*
+                    Required if you want to render columns. We need this information in removeFromDom.
+                */
+                rowIndex: {type: ['number', 'undefined'], default: undefined}
+            });
+
+            var oldStartIndex = params.oldChildren.length - _.compact(params.oldChildren).length;
             var removedIndices = [];
 
-            _.each(oldChildren, function (child, index) {
+            _.each(params.oldChildren, function (child, index) {
                 if (!child) {
                     return;
                 }
-                if (_.indexOf(newChildren, child) === -1) {
-                    child.remove();
+                if (_.indexOf(params.newChildren, child) === -1) {
+                    removeFromDom({
+                        item: child,
+                        rowIndex: params.rowIndex === undefined ? index : params.rowIndex,
+                        columnIndex: params.rowIndex === undefined ? undefined : index
+                    });
                     removedIndices.push(index);
                 }
             });
@@ -541,11 +636,11 @@ window.VirtualScroller = (function ($, _) {
             var prepend = [];
             var append = [];
 
-            _.each(newChildren, function (child, index) {
+            _.each(params.newChildren, function (child, index) {
                 if (!child) {
                     return;
                 }
-                if (_.indexOf(oldChildren, child) === -1) {
+                if (_.indexOf(params.oldChildren, child) === -1) {
                     if (index < oldStartIndex) {
                         prepend.push(child);
                     } else {
@@ -554,60 +649,339 @@ window.VirtualScroller = (function ($, _) {
                 }
             });
 
-            canvas.prepend(prepend).append(append);
+            params.canvas.prepend(prepend).append(append);
             return removedIndices;
         };
 
-        var renderStateY = function (canvas, state, oldState) {
-            canvas.css({
-                transform: 'translateY(' + state.offset + 'px)',
-                height: state.canvasSize + 'px'
+        var renderStateY = function (canvas, scrollCanvas, state, oldState) {
+            if (oldState.canvasSize !== state.canvasSize) {
+                canvas
+                    .add(scrollCanvas)
+                    .add(config.stickyColumnsCanvas)
+                    .css({
+                        height: state.canvasSize + 'px',
+                        minHeight: state.canvasSize + 'px'
+                    });
+            }
+            var removedIndices = renderChildren({
+                canvas: canvas,
+                newChildren: state.children,
+                oldChildren: oldState.children
             });
-            var removedIndices = renderChildren(canvas, state.children, oldState.children);
             _.each(removedIndices, function (index) {
                 renderManager.rowStates[index] = undefined;
+                renderManager.stickyColumnRowStates[index] = undefined;
             });
             return canvas;
         };
 
-        var renderStateX = function (row, state, oldState) {
+        var renderStateX = function (row, state, oldState, rowIndex) {
+            var canvas = config.columnCanvasSelector ? row.find(config.columnCanvasSelector) : row;
 
-            row.css({
-                transform: 'translateX(' + state.offset + 'px)'
+            renderChildren({
+                canvas: canvas,
+                newChildren: state.children,
+                oldChildren: oldState.children,
+                rowIndex: rowIndex
             });
-
-            renderChildren(row, state.children, oldState.children);
 
             return row;
         };
 
+        var _renderRow = function (params) {
+
+            params = validateParameters(params, {
+                rowIndex: {type: 'number'}
+            });
+
+            var row = config.renderRow({
+                rowIndex: params.rowIndex
+            });
+
+            var height = config.rowHeight;
+
+            /*
+                As long as dom elements are not attached, their dimensions cannot be determined.
+                So we append it to the canvas before we read the height (it has to be appended to
+                the canvas or a clone of it because the dimensions of the element might change
+                depending on the dimensions of the canvas).
+            */
+            if (config.dynamicRowHeight) {
+                if (!config.rowHeightIsAccurate) {
+                    row.appendTo(config.canvas);
+                }
+                height = row[DETECT_ITEM_HEIGHT_FN]();
+            }
+
+            return {item: row, size: height};
+        };
+
+        var _renderColumn = function (params) {
+
+            params = validateParameters(params, {
+                rowIndex: {type: 'number'},
+                columnIndex: {type: 'number'},
+                row: {type: 'object'}
+            });
+
+            var column = config.renderColumn({
+                rowIndex: params.rowIndex,
+                columnIndex: params.columnIndex
+            });
+
+            var width = config.columnWidth;
+            /*
+                As long as dom elements are not attached, their dimensions cannot
+                be determined. So we append it to the row before we read the height
+                (it has to be appended to the row or a clone of it because the dimensions
+                of the element might change depending on the dimensions of the row).
+            */
+            if (config.dynamicColumnWidth) {
+                if (!config.columnWidthIsAccurate) {
+                    params.row.append(column);
+                }
+                width = column[DETECT_ITEM_WIDTH_FN]();
+            }
+
+            return {item: column, size: width};
+        };
+
         renderManager.render = function () {
 
-            var oldState = renderManager.state;
+            var sumRowSizes = function (amount) {
+                if (config.dynamicRowHeight === false) {
+                    return amount * config.rowHeight;
+                }
+                return sumSizes({
+                    startIndex: 0,
+                    amount: amount,
+                    sizeCache: renderManager.sizeCache.rows,
+                    itemSize: config.rowHeight
+                });
+            };
 
+            var sumColumnSizes = function (amount) {
+                if (config.dynamicColumnWidth === false) {
+                    return amount * config.columnWidth;
+                }
+                return sumSizes({
+                    startIndex: 0,
+                    amount: amount,
+                    sizeCache: renderManager.sizeCache.columns,
+                    itemSize: config.columnWidth
+                });
+            };
+
+            if (config.stickyRows > 0) {
+                var oldStickyState = renderManager.stickyState;
+                var updateStickyStateResult = updateState({
+                    oldState: oldStickyState,
+                    sizeCache: renderManager.sizeCache.rows,
+                    containerSize: sumRowSizes(config.stickyRows),
+                    scrollOffset: 0,
+                    itemCount: config.stickyRows,
+                    itemSize: config.rowHeight,
+                    dynamicItemSize: config.dynamicRowHeight,
+                    preRender: 0,
+                    renderItem: function (params) {
+                        return _renderRow({rowIndex: params.index});
+                    }
+                });
+                renderManager.stickyState = updateStickyStateResult.state;
+                renderManager.sizeCache.rows = updateStickyStateResult.sizeCache;
+                renderStateY(config.stickyRowsCanvas, config.stickyRowsCanvas, renderManager.stickyState, oldStickyState);
+            }
+
+            var scrollTop = config.scrollContainer.scrollTop();
+            var scrollContainerHeight = config.scrollContainer[DETECT_CONTAINER_HEIGHT_FN]();
+            var scrollLeft; // only set if needed
+            var scrollContainerWidth; // only set if needed
+
+
+            var oldState = renderManager.state;
             var updateStateResult = updateState({
                 oldState: oldState,
                 sizeCache: renderManager.sizeCache.rows,
-                containerSize: config.container.height(),
-                scrollOffset: config.container.scrollTop(),
+                containerSize: scrollContainerHeight,
+                scrollOffset: scrollTop,
                 itemCount: config.rowCount,
                 itemSize: config.rowHeight,
                 dynamicItemSize: config.dynamicRowHeight,
                 preRender: config.preRenderRows,
                 renderItem: function (params) {
-                    var row = config.renderRow({
-                        rowIndex: params.index
-                    });
-                    return {
-                        item: row,
-                        size: config.dynamicRowHeight ? row.outerHeight() : config.rowHeight
-                    };
+                    if (config.stickyRows > params.index) {
+                        var size = renderManager.sizeCache.rows[params.index] || config.rowHeight;
+                        return {
+                            item: $('<div>').css('height', size),
+                            size: size
+                        };
+                    }
+
+                    return _renderRow({rowIndex: params.index});
                 }
             });
+
             renderManager.state = updateStateResult.state;
             renderManager.sizeCache.rows = updateStateResult.sizeCache;
 
             if (config.renderColumn) {
+
+                scrollLeft = config.scrollContainer.scrollLeft();
+                scrollContainerWidth = config.scrollContainer[DETECT_CONTAINER_WIDTH_FN]();
+
+                if (config.stickyColumns > 0) {
+                    var oldStickyColumnState = renderManager.stickyColumnState;
+                    var updateStickyColumnStateResult = updateState({
+                        oldState: oldStickyColumnState,
+                        sizeCache: renderManager.sizeCache.rows,
+                        containerSize: scrollContainerHeight,
+                        scrollOffset: scrollTop,
+                        itemCount: config.rowCount,
+                        itemSize: config.rowHeight,
+                        dynamicItemSize: config.dynamicRowHeight,
+                        preRender: config.preRenderRows,
+                        renderItem: function (params) {
+                            if (config.stickyRows > params.index) {
+                                var size = renderManager.sizeCache.rows[params.index] || config.rowHeight;
+                                return {
+                                    item: $('<div>').css('height', size),
+                                    size: size
+                                };
+                            }
+                            return _renderRow({rowIndex: params.index});
+                        }
+                    });
+                    renderManager.sizeCache.rows = updateStickyColumnStateResult.sizeCache;
+                    renderManager.stickyColumnState = updateStickyColumnStateResult.state;
+                    renderStateY(config.stickyColumnsCanvas, config.stickyColumnsCanvas, renderManager.stickyColumnState, oldStickyColumnState);
+
+                    renderManager.stickyColumnState.children = _.map(
+                        renderManager.stickyColumnState.children,
+                        function (child, rowIndex) {
+                            if (!child) {
+                                return child;
+                            }
+                            var oldStickyColumnRowState = renderManager.stickyColumnRowStates[rowIndex] || {};
+                            var updateStickyColumnRowStateResult = updateState({
+                                oldState: oldStickyColumnRowState,
+                                sizeCache: renderManager.sizeCache.columns,
+                                containerSize: sumColumnSizes(config.stickyColumns),
+                                scrollOffset: 0,
+                                itemCount: config.stickyColumns,
+                                itemSize: config.columnWidth,
+                                dynamicItemSize: config.dynamicColumnWidth,
+                                preRender: 0,
+                                renderItem: function (params) {
+                                    if (config.stickyRows > rowIndex) {
+                                        var size = renderManager.sizeCache.columns[params.index] || config.columnWidth;
+                                        return {
+                                            item: $('<div>').css('width', size),
+                                            size: size
+                                        };
+                                    }
+                                    return _renderColumn({
+                                        rowIndex: rowIndex,
+                                        columnIndex: params.index,
+                                        row: child
+                                    });
+                                }
+                            });
+                            renderManager.stickyColumnRowStates[rowIndex] = updateStickyColumnRowStateResult.state;
+                            renderManager.sizeCache.columns = updateStickyColumnRowStateResult.sizeCache;
+                            renderStateX(child, renderManager.stickyColumnRowStates[rowIndex], oldStickyColumnRowState, rowIndex);
+                            return child;
+                        }
+                    );
+                }
+
+                if (config.stickyRows > 0) {
+                    renderManager.stickyState.children = _.map(
+                        renderManager.stickyState.children,
+                        function (child, rowIndex) {
+                            var oldStickyRowState = renderManager.stickyRowStates[rowIndex] || {};
+                            var updateStickyRowStateResult = updateState({
+                                oldState: oldStickyRowState,
+                                sizeCache: renderManager.sizeCache.columns,
+                                containerSize: scrollContainerWidth,
+                                scrollOffset: scrollLeft,
+                                itemCount: config.columnCount,
+                                itemSize: config.columnWidth,
+                                dynamicItemSize: config.dynamicColumnWidth,
+                                preRender: config.preRenderColumns,
+                                renderItem: function (params) {
+                                    if (config.stickyColumns > params.index) {
+                                        var size = renderManager.sizeCache.columns[params.index] || config.columnWidth;
+                                        return {
+                                            item: $('<div>').css('width', size),
+                                            size: size
+                                        };
+                                    }
+                                    return _renderColumn({
+                                        rowIndex: rowIndex,
+                                        columnIndex: params.index,
+                                        row: child
+                                    });
+                                }
+                            });
+                            renderManager.stickyRowStates[rowIndex] = updateStickyRowStateResult.state;
+                            renderManager.sizeCache.columns = updateStickyRowStateResult.sizeCache;
+                            renderStateX(child, renderManager.stickyRowStates[rowIndex], oldStickyRowState, rowIndex);
+                            return child;
+                        }
+                    );
+                }
+
+                if (config.stickyRows > 0 && config.stickyColumns > 0) {
+                    var oldFixedState = renderManager.fixedState;
+                    var updateFixedStateResult = updateState({
+                        oldState: oldFixedState,
+                        sizeCache: renderManager.sizeCache.rows,
+                        containerSize: sumRowSizes(config.stickyRows),
+                        scrollOffset: 0,
+                        itemCount: config.stickyRows,
+                        itemSize: config.rowHeight,
+                        dynamicItemSize: config.dynamicRowHeight,
+                        preRender: 0,
+                        renderItem: function (params) {
+                            return _renderRow({rowIndex: params.index});
+                        }
+                    });
+                    renderManager.fixedState = updateFixedStateResult.state;
+                    renderManager.sizeCache.rows = updateFixedStateResult.sizeCache;
+
+                    renderManager.fixedState.children = _.map(
+                        renderManager.fixedState.children,
+                        function (child, rowIndex) {
+                            var oldFixedRowState = renderManager.fixedRowStates[rowIndex] || {};
+                            var updateStateResult = updateState({
+                                oldState: oldFixedRowState,
+                                sizeCache: renderManager.sizeCache.columns,
+                                containerSize: sumColumnSizes(config.stickyColumns),
+                                scrollOffset: 0,
+                                itemCount: config.stickyColumns,
+                                itemSize: config.columnWidth,
+                                dynamicItemSize: config.dynamicColumnWidth,
+                                preRender: 0,
+                                renderItem: function (params) {
+                                    return _renderColumn({
+                                        rowIndex: rowIndex,
+                                        columnIndex: params.index,
+                                        row: child
+                                    });
+                                }
+                            });
+                            renderManager.fixedRowStates[rowIndex] = updateStateResult.state;
+                            renderManager.sizeCache.columns = updateStateResult.sizeCache;
+                            renderStateX(child, renderManager.fixedRowStates[rowIndex], oldFixedRowState, rowIndex);
+                            return child;
+                        }
+                    );
+
+                    renderStateY(config.fixedCanvas, config.fixedCanvas, renderManager.fixedState, oldFixedState);
+                }
+
+                var someOldChildState = _.last(_.compact(renderManager.rowStates));
+
                 renderManager.state.children = _.map(
                     renderManager.state.children,
                     function (child, rowIndex) {
@@ -618,51 +992,96 @@ window.VirtualScroller = (function ($, _) {
                         var updateRowStateResult = updateState({
                             oldState: oldRowState,
                             sizeCache: renderManager.sizeCache.columns,
-                            containerSize: config.container.outerWidth(),
-                            scrollOffset: config.container.scrollLeft(),
+                            containerSize: scrollContainerWidth,
+                            scrollOffset: scrollLeft,
                             itemCount: config.columnCount,
                             itemSize: config.columnWidth,
                             dynamicItemSize: config.dynamicColumnWidth,
                             preRender: config.preRenderColumns,
                             renderItem: function (params) {
-                                var column = config.renderColumn({
+                                if (config.stickyColumns > params.index || config.stickyRows > rowIndex) {
+                                    var size = renderManager.sizeCache.columns[params.index] || config.columnWidth;
+                                    return {
+                                        item: $('<div>').css('width', size),
+                                        size: size
+                                    };
+                                }
+                                return _renderColumn({
                                     rowIndex: rowIndex,
-                                    columnIndex: params.index
+                                    columnIndex: params.index,
+                                    row: child
                                 });
-                                return {
-                                    item: column,
-                                    size: config.dynamicColumnWidth ? column.width() : config.columnWidth
-                                };
                             }
                         });
                         renderManager.rowStates[rowIndex] = updateRowStateResult.state;
                         renderManager.sizeCache.columns = updateRowStateResult.sizeCache;
-                        renderStateX(child, renderManager.rowStates[rowIndex], oldRowState);
+                        renderStateX(child, renderManager.rowStates[rowIndex], oldRowState, rowIndex);
                         return child;
                     }
                 );
 
-                var someChildState = _.first(_.compact(renderManager.rowStates));
-                config.canvas.css('width', someChildState.canvasSize);
-                if (someChildState.adjustedScrollOffsetBy > 0) {
-                    config.container.scrollLeft(config.container.scrollLeft() + someChildState.adjustedScrollOffsetBy);
+                /*
+                    We are using last instead of first here because the first rendered state might be
+                    the one of a sticky row which might be filled with fake dom nodes and might have
+                    wrong canvas size after the first rendering.
+                */
+                var someChildState = _.last(_.compact(renderManager.rowStates));
+                if (!someOldChildState || someChildState.canvasSize !== someOldChildState.canvasSize) {
+                    config.scrollCanvas
+                        .add(config.canvas)
+                        .add(config.stickyRowsCanvas)
+                        .add(config.stickyCanvasContainer)
+                        .css('width', someChildState.canvasSize);
                 }
 
+                if (someChildState.adjustedScrollOffsetBy > 0) {
+                    config.scrollContainer.scrollLeft(scrollLeft + someChildState.adjustedScrollOffsetBy);
+                }
             }
 
-            renderStateY(config.canvas, renderManager.state, oldState);
+            renderStateY(config.canvas, config.scrollCanvas, renderManager.state, oldState);
             if (renderManager.state.adjustedScrollOffsetBy > 0) {
-                config.container.scrollTop(
-                    config.container.scrollTop() + renderManager.state.adjustedScrollOffsetBy
-                );
+                config.scrollContainer.scrollTop(scrollTop + renderManager.state.adjustedScrollOffsetBy);
             }
+
+            updateStyles({
+                translateY: (renderManager.state.scrollOffset - renderManager.state.offset) * -1,
+                translateX: someChildState ? (someChildState.scrollOffset - someChildState.offset) * -1 : 0
+            });
         };
 
-        renderManager.updateRowSizeAtIndex = function (params) {
+
+        renderManager.isRowRendered = function (params) {
+            params = validateParameters(params, {
+                rowIndex: {type: 'number'}
+            });
+            return !!(config.stickyRows > params.rowIndex || renderManager.state.children[params.rowIndex]);
+        };
+
+        renderManager.isColumnRendered = function (params) {
+            params = validateParameters(params, {
+                rowIndex: {type: 'number', default: _.findIndex(renderManager.rowStates, function (state) {
+                    return !!state;
+                })},
+                columnIndex: {type: 'number'}
+            });
+            var rowState = renderManager.rowStates[params.rowIndex];
+            return !!(
+                config.stickyRows > params.rowIndex ||
+                config.stickyColumns > params.columnIndex ||
+                (rowState && rowState.children[params.columnIndex])
+            );
+        };
+
+        renderManager.reevaluateRowSizeAtIndex = function (params) {
 
             params = validateParameters(params, {
                 rowIndex: {type: 'number'}
             });
+
+            if (!config.dynamicRowHeight) {
+                return;
+            }
 
             var rowElement = renderManager.state.children && renderManager.state.children[params.rowIndex];
             if (rowElement === undefined) {
@@ -675,28 +1094,52 @@ window.VirtualScroller = (function ($, _) {
             Either updates the width of a specific column at the given rowIndex or
             all columns at the given columnIndex in every row.
         */
-        renderManager.updateColumnSizeAtIndex = function (params) {
+        renderManager.reevaluateColumnSizeAtIndex = function (params) {
 
             params = validateParameters(params, {
                 rowIndex: {type: ['number', 'undefined'], default: undefined},
                 columnIndex: {type: 'number'}
             });
 
-            var firstRenderedRowState = _.first(_.compact(renderManager.rowStates));
-            var firstRenderedColumn = _.first(_.compact(firstRenderedRowState.children));
-            renderManager.sizeCache.columns[params.columnIndex] = firstRenderedColumn.width();
+            if (!config.dynamicColumnWidth) {
+                return;
+            }
+
+            var lastRenderedRowState = _.last(_.compact(renderManager.rowStates));
+            var lastRenderedColumn = _.last(_.compact(lastRenderedRowState.children));
+            renderManager.sizeCache.columns[params.columnIndex] = lastRenderedColumn.width();
         };
 
-        /*
-        renderManager.getFirstRowIndexInViewport = function () {
-            return howManyItemsFitIn({
-                startIndex: 0,
-                containerSize: renderManager.state.scrollOffset,
-                sizeCache: renderManager.state.sizeCache,
-                itemSize: config.rowHeight
-            });
+        renderManager.reevaluateAllSizes = function () {
+
+            if (config.dynamicRowHeight) {
+                renderManager.sizeCache.rows = _.map(
+                    renderManager.sizeCache.rows,
+                    function (size, index) {
+                        var child = renderManager.state.children[index];
+                        if (!child) {
+                            return size;
+                        }
+                        return child[DETECT_ITEM_HEIGHT_FN]();
+                    }
+                );
+            }
+
+            if (config.dynamicColumnWidth) {
+                var lastRenderedRowState = _.last(_.compact(renderManager.rowStates));
+                renderManager.sizeCache.columns = _.map(
+                    renderManager.sizeCache.columns,
+                    function (size, index) {
+                        var child = lastRenderedRowState.children[index];
+                        if (!child) {
+                            return size;
+                        }
+                        return child[DETECT_ITEM_WIDTH_FN]();
+                    }
+                );
+            }
+
         };
-        */
 
         renderManager.getScrollTopForRowIndex = function (params) {
             params = validateParameters(params, {
@@ -731,14 +1174,28 @@ window.VirtualScroller = (function ($, _) {
         };
 
         renderManager.resetState = function () {
-            _.each(renderManager.state.children, function (child) {
+            var removeChildAtIndex = function (child, index) {
                 if (child) {
-                    child.remove();
+                    removeFromDom({
+                        item: child,
+                        rowIndex: index
+                    });
                 }
-            });
+            };
+            _.each(renderManager.state.children, removeChildAtIndex);
+            _.each(renderManager.stickyState.children, removeChildAtIndex);
+            _.each(renderManager.stickyColumnState.children, removeChildAtIndex);
+            _.each(renderManager.fixedState.children, removeChildAtIndex);
+
+            renderManager.sizeCache = {rows: [], columns: []};
             renderManager.state = {};
             renderManager.rowStates = [];
-            renderManager.sizeCache = {rows: [], columns: []};
+            renderManager.stickyState = {};
+            renderManager.stickyRowStates = [];
+            renderManager.stickyColumnState = {};
+            renderManager.stickyColumnRowStates = [];
+            renderManager.fixedState = {};
+            renderManager.fixedRowStates = [];
         };
 
         renderManager.resetRenderedState = function () {
@@ -749,44 +1206,9 @@ window.VirtualScroller = (function ($, _) {
                 keep his scroll position.
             */
 
-            _.each(renderManager.state.children, function (child) {
-                if (child) {
-                    child.remove();
-                }
-            });
-
-            /*
-            if (config.dynamicRowHeight) {
-                renderManager.sizeCache.rows = _.map(
-                    renderManager.sizeCache.rows,
-                    function (size, index) {
-                        if (renderManager.state.children && renderManager.state.children[index]) {
-                            // index was rendered, we want to reset this size
-                            return undefined;
-                        }
-                        return size;
-                    }
-                );
-            }
-            */
-            renderManager.state = {};
-
-            /*
-            if (config.dynamicColumnWidth) {
-                var firstRenderedRowState = _.first(_.compact(renderManager.rowStates));
-                renderManager.sizeCache.columns = _.map(
-                    renderManager.sizeCache.columns,
-                    function (size, index) {
-                        if (firstRenderedRowState.children && firstRenderedRowState.children[index]) {
-                            // index was rendered, we want to reset this size
-                            return undefined;
-                        }
-                        return size;
-                    }
-                );
-            }
-            */
-            renderManager.rowStates = [];
+            var sizeCache = renderManager.sizeCache;
+            renderManager.resetState();
+            renderManager.sizeCache = sizeCache;
         };
 
         var rowOrColumnIndexIsSet = function (params) {
@@ -813,12 +1235,14 @@ window.VirtualScroller = (function ($, _) {
 
 
         var updateIndexAttributes = function (children) {
-            return _.map(children, function (child, index) {
+            children = _.map(children, function (child, index) {
                 if (child) {
                     child.attr('virtual-scroller-index', index);
                 }
                 return child;
             });
+            config.onAfterIndicesChanged();
+            return children;
         };
 
         renderManager.removeItemAt = function (params) {
@@ -827,37 +1251,90 @@ window.VirtualScroller = (function ($, _) {
 
             if (params.rowIndex !== undefined) {
 
-                config.rowCount -= 1; // TODO: Should this be done in here?
+                var oldRowCount = config.rowCount;
+                config.rowCount -= 1;
 
-                if (renderManager.state.children[params.rowIndex]) {
-                    renderManager.state.children[params.rowIndex].remove();
+                var statesToRemoveRowFrom;
+                var rowStatesToRemoveRowFrom;
+
+                if (config.stickyRows > params.rowIndex) {
+                    statesToRemoveRowFrom = [renderManager.stickyState, renderManager.fixedState];
+                    rowStatesToRemoveRowFrom = [renderManager.stickyRowStates, renderManager.fixedRowStates];
+                } else {
+                    statesToRemoveRowFrom = [renderManager.state, renderManager.stickyColumnState];
+                    rowStatesToRemoveRowFrom = [renderManager.rowStates, renderManager.stickyColumnRowStates];
                 }
-                renderManager.state.children.splice(params.rowIndex, 1);
-                renderManager.state.children = updateIndexAttributes(renderManager.state.children);
-                renderManager.rowStates.splice(params.rowIndex, 1);
+
+                _.each(statesToRemoveRowFrom, function (state) {
+                    if (!state.children) {
+                        return;
+                    }
+                    if (state.children[params.rowIndex]) {
+                        removeFromDom({
+                            item: state.children[params.rowIndex],
+                            rowIndex: params.rowIndex
+                        });
+                    }
+                    state.children.splice(params.rowIndex, 1);
+                    state.children = updateIndexAttributes(state.children);
+                });
+
+                _.each(rowStatesToRemoveRowFrom, function (rowStates) {
+                    rowStates.splice(params.rowIndex, 1);
+                });
 
                 if (config.dynamicRowHeight) {
                     renderManager.sizeCache.rows.splice(params.rowIndex, 1);
                 }
+
+                config.onAfterRowCountChanged({
+                    oldRowCount: oldRowCount,
+                    newRowCount: config.rowCount,
+                });
             }
             else if (params.columnIndex !== undefined) {
 
-                config.columnCount -= 1; // TODO: Should this be done in here?
+                var oldColumnCount = config.columnCount;
+                config.columnCount -= 1;
 
-                renderManager.rowStates = _.map(renderManager.rowStates, function (rowState) {
-                    if (!rowState) {
-                        return rowState;
-                    }
-                    if (rowState.children[params.columnIndex]) {
-                        rowState.children[params.columnIndex].remove();
-                    }
-                    rowState.children.splice(params.columnIndex, 1);
-                    rowState.children = updateIndexAttributes(rowState.children);
-                    if (config.dynamicColumnWidth) {
-                        renderManager.sizeCache.columns.splice(params.columnIndex, 1);
-                    }
-                    return rowState;
+                var rowStatesToRemoveColumnFrom;
+
+                if (config.stickyColumns > params.columnIndex) {
+                    rowStatesToRemoveColumnFrom = ['fixedRowStates', 'stickyColumnRowStates'];
+                } else {
+                    rowStatesToRemoveColumnFrom = ['stickyRowStates', 'rowStates'];
+                }
+
+                _.each(rowStatesToRemoveColumnFrom, function (rowStatesName) {
+                    renderManager[rowStatesName] = _.map(
+                        renderManager[rowStatesName],
+                        function (rowState, rowIndex) {
+                            if (!rowState || !rowState.children) {
+                                return rowState;
+                            }
+                            if (rowState.children[params.columnIndex]) {
+                                removeFromDom({
+                                    item: rowState.children[params.columnIndex],
+                                    rowIndex: rowIndex,
+                                    columnIndex: params.columnIndex
+                                });
+                            }
+                            rowState.children.splice(params.columnIndex, 1);
+                            rowState.children = updateIndexAttributes(rowState.children);
+                            return rowState;
+                        }
+                    );
                 });
+
+                if (config.dynamicColumnWidth) {
+                    renderManager.sizeCache.columns.splice(params.columnIndex, 1);
+                }
+
+                config.onAfterColumnCountChanged({
+                    oldColumnCount: oldColumnCount,
+                    newColumnCount: config.columnCount
+                });
+
             }
         };
 
@@ -867,99 +1344,212 @@ window.VirtualScroller = (function ($, _) {
 
             if (params.rowIndex !== undefined) {
 
-                config.rowCount += 1; // TODO: Should this be done in here?
+                var oldRowCount = config.rowCount;
+                config.rowCount += 1;
 
+                /*
+                    Adding a row as a sticky row would requires us to do a lot of delta management.
+                    So we just rerender the viewport for now.
+                */
+                if (config.stickyRows > params.rowIndex) {
+                    renderManager.resetRenderedState();
+                    renderManager.render();
+                }
                 // Only render the row if it is inside the viewport
-                if (!renderManager.state.children[params.rowIndex]) {
-                    return;
+                else if (!renderManager.state.children[params.rowIndex]) {
+
+                    // If it was added as the last row, we can just call render and it will show up
+                    // because it will be appended
+                    if (params.rowIndex === config.rowCount - 1) {
+                        renderManager.render();
+                    }
                 }
+                else {
 
-                // Actually render the row and insert it
-                var row = config.renderRow({
-                    rowIndex: params.rowIndex
-                });
-                renderManager.state.children.splice(params.rowIndex, 0, row);
-                renderManager.state.children = updateIndexAttributes(renderManager.state.children);
-
-                if (renderManager.state.children[params.rowIndex - 1]) {
-                    row.insertAfter(renderManager.state.children[params.rowIndex - 1]);
-                } else {
-                    config.canvas.prepend(row);
-                }
-
-                if (config.dynamicRowHeight) {
-                    renderManager.sizeCache.rows.splice(params.rowIndex, 0, row.outerHeight());
-                }
-
-                // If the user specified how to render columns inside the row, go ahead and do that
-                if (config.renderColumn) {
-                    var rowIndex = params.rowIndex;
-                    var resultOfUpdateStateForRowState = updateState({
-                        oldState: {},
-                        sizeCache: renderManager.sizeCache.columns,
-                        containerSize: config.container.outerWidth(),
-                        scrollOffset: config.container.scrollLeft(),
-                        itemCount: config.columnCount,
-                        itemSize: config.columnWidth,
-                        dynamicItemSize: config.dynamicColumnWidth,
-                        preRender: config.preRenderColumns,
-                        renderItem: function (params) {
-                            var column = config.renderColumn({
-                                rowIndex: rowIndex,
-                                columnIndex: params.index
+                    var statePairsToAddRowTo = [{
+                        state: renderManager.state,
+                        rowStates: renderManager.rowStates,
+                        canvas: config.canvas,
+                        scrollLeft: config.scrollContainer.scrollLeft(),
+                        containerSize: config.scrollContainer[DETECT_CONTAINER_WIDTH_FN](),
+                        preRenderColumns: config.preRenderColumns,
+                        columnCount: config.columnCount,
+                        renderColumn: function (params) {
+                            if (config.stickyColumns > params.columnIndex) {
+                                var size = renderManager.sizeCache.columns[params.columnIndex] || config.columnWidth;
+                                return {
+                                    item: $('<div>').css('width', size),
+                                    size: size
+                                };
+                            }
+                            return _renderColumn({
+                                rowIndex: params.rowIndex,
+                                columnIndex: params.columnIndex,
+                                row: params.row
                             });
-                            return {
-                                item: column,
-                                size: config.dynamicColumnWidth ? column.width() : config.columnWidth
-                            };
                         }
+                    }];
+                    if (config.stickyColumns > 0) {
+                        statePairsToAddRowTo.push({
+                            state: renderManager.stickyColumnState,
+                            rowStates: renderManager.stickyColumnRowStates,
+                            canvas: config.stickyColumnsCanvas,
+                            scrollLeft: 0,
+                            containerSize: config.stickyColumnsCanvas[DETECT_ITEM_WIDTH_FN](),
+                            preRenderColumns: 0,
+                            columnCount: config.stickyColumns,
+                            renderColumn: function (params) {
+                                return _renderColumn({
+                                    rowIndex: params.rowIndex,
+                                    columnIndex: params.columnIndex,
+                                    row: params.row
+                                });
+                            }
+                        });
+                    }
+
+                    _.each(statePairsToAddRowTo, function (renderParams) {
+                        var state = renderParams.state;
+                        var rowStates = renderParams.rowStates;
+                        var canvas = renderParams.canvas;
+
+                        // Actually render the row and insert it
+                        var row = _renderRow({rowIndex: params.rowIndex}).item;
+
+                        state.children.splice(params.rowIndex, 0, row);
+                        state.children = updateIndexAttributes(state.children);
+
+                        if (state.children[params.rowIndex - 1]) {
+                            row.insertAfter(state.children[params.rowIndex - 1]);
+                        } else {
+                            canvas.prepend(row);
+                        }
+
+                        // If the user specified how to render columns inside the row, go ahead and do that
+                        if (config.renderColumn) {
+                            // TODO: Unify with the calls in renderManager.render
+                            var rowIndex = params.rowIndex;
+                            var resultOfUpdateStateForRowState = updateState({
+                                oldState: {},
+                                sizeCache: renderManager.sizeCache.columns,
+                                containerSize: renderParams.containerSize,
+                                scrollOffset: renderParams.scrollLeft,
+                                itemCount: renderParams.columnCount,
+                                itemSize: config.columnWidth,
+                                dynamicItemSize: config.dynamicColumnWidth,
+                                preRender: renderParams.preRenderColumns,
+                                renderItem: function(params) {
+                                    return renderParams.renderColumn({
+                                        row: row,
+                                        rowIndex: rowIndex,
+                                        columnIndex: params.index
+                                    });
+                                }
+                            });
+                            var rowState = resultOfUpdateStateForRowState.state;
+                            renderManager.sizeCache.columns = resultOfUpdateStateForRowState.sizeCache;
+                            rowStates.splice(params.rowIndex, 0, rowState);
+                            renderStateX(row, rowState, {}, rowIndex);
+                        }
+
                     });
-                    var rowState = resultOfUpdateStateForRowState.state;
-                    renderManager.sizeCache.columns = resultOfUpdateStateForRowState.sizeCache;
-                    renderManager.rowStates.splice(params.rowIndex, 0, rowState);
-                    renderStateX(row, rowState, {});
+
+                    if (config.dynamicRowHeight) {
+                    renderManager.sizeCache.rows.splice(
+                        params.rowIndex,
+                        0,
+                        renderManager.state.children[params.rowIndex][DETECT_ITEM_HEIGHT_FN]()
+                    );
                 }
+
+                    renderManager.render(); // just to set the canvas size correctly
+                }
+
+                config.onAfterRowCountChanged({
+                    oldRowCount: oldRowCount,
+                    newRowCount: config.rowCount
+                });
 
             } else if (params.columnIndex !== undefined) {
 
-                config.columnIndex += 1; // TODO: Should this be done in here?
+                var oldColumnCount = config.columnCount;
+                config.columnCount += 1;
 
-                var isFirstRenderedColumn = true;
+                /*
+                    Adding a row as a sticky column would requires us to do a lot of delta management.
+                    So we just rerender the viewport for now.
+                */
+                if (config.stickyColumns > params.columnIndex) {
+                    renderManager.resetRenderedState();
+                    renderManager.render();
+                }
+                else if (params.columnIndex === config.columnCount - 1) {
+                    // If it was added as the last column, we can just call render and it will show up
+                    // because the new columns will be appended
+                    renderManager.render();
+                }
+                else {
 
-                // Insert a new column in every row
-                renderManager.rowStates = _.map(renderManager.rowStates, function (rowState, rowIndex) {
-                    if (!rowState) {
-                        return rowState;
+                    var statePairsToAddRowTo = [{
+                        state: 'state',
+                        rowStates: 'rowStates'
+                    }];
+
+                    if (config.stickyRows > 0) {
+                        statePairsToAddRowTo.push({
+                            state: 'stickyState',
+                            rowStates: 'stickyRowStates'
+                        });
                     }
 
-                    // Only render the column if it is inside the viewport
-                    if (!rowState.children[params.columnIndex]) {
-                        return;
-                    }
+                    _.each(statePairsToAddRowTo, function (propNames) {
+                        // Insert a new column in every row
+                        renderManager[propNames.rowStates] = _.map(
+                            renderManager[propNames.rowStates],
+                            function (rowState, rowIndex) {
+                                if (!rowState) {
+                                    return rowState;
+                                }
 
-                    var column = config.renderColumn({
-                        rowIndex: rowIndex,
-                        columnIndex: params.columnIndex
+                                // Only render the column if it is inside the viewport
+                                if (!rowState.children[params.columnIndex]) {
+                                    return;
+                                }
+
+                                var row = renderManager[propNames.state].children[rowIndex];
+
+                                var column = _renderColumn({
+                                    rowIndex: rowIndex,
+                                    columnIndex: params.columnIndex,
+                                    row: row
+                                }).item;
+
+                                rowState.children.splice(params.columnIndex, 0, column);
+                                rowState.children = updateIndexAttributes(rowState.children);
+
+                                if (rowState.children[params.columnIndex - 1]) {
+                                    column.insertAfter(rowState.children[params.columnIndex - 1]);
+                                } else {
+                                    row.prepend(column);
+                                }
+
+                                return rowState;
+                            }
+                        );
                     });
 
-                    rowState.children.splice(params.columnIndex, 0, column);
-                    rowState.children = updateIndexAttributes(rowState.children);
-                    if (rowState.children[params.columnIndex - 1]) {
-                        column.insertAfter(rowState.children[params.columnIndex - 1]);
-                    } else {
-                        renderManager.state.children[rowIndex].prepend(column);
+                    if (config.dynamicColumnWidth) {
+                        renderManager.sizeCache.columns.splice(
+                            params.columnIndex,
+                            0,
+                            _.last(_.compact(renderManager.rowStates)).children[params.columnIndex][DETECT_ITEM_WIDTH_FN]()
+                        );
                     }
+                }
 
-                    // Optimization: Only do this for the first rendered column because they will
-                    // all have the same width
-                    if (isFirstRenderedColumn) {
-                        if (config.dynamicColumnWidth) {
-                            renderManager.sizeCache.columns.splice(params.columnIndex, 0, column.outerWidth());
-                        }
-                    }
-
-                    isFirstRenderedColumn = false;
-                    return rowState;
+                config.onAfterColumnCountChanged({
+                    oldColumnCount: oldColumnCount,
+                    newColumnCount: config.columnCount
                 });
 
             }
@@ -973,34 +1563,6 @@ window.VirtualScroller = (function ($, _) {
 
         var EVENT_NAMESPACE = 'VirtualScroller-' + _.uniqueId();
 
-        /*
-            Idee:
-
-            config in rows und columns aufteilen
-
-            rows: {
-                render: function,
-                count: number,
-            },
-            columns: {
-                render: function,
-                count: number
-            }
-
-            TODO:
-
-            * Github Repo
-            * addedRow/Column => to call after dragging/dropping a new row into the scroller
-            * Firefox support
-
-            * workaround for the maximum height of elements
-            * prevent tab from crashing if rowCount/columnCount is > 50000000
-            * How to handle async loading of data (enable user to do batch requests)
-            * Check if nested scrollers work
-            * Find a way to get rid of the required min height for dynamic items
-            * dynamicRowHeight + dynamicColumnWidth => weird things happen when scrolling fast
-        */
-
         config = validateParameters(config, {
 
             /*
@@ -1009,18 +1571,36 @@ window.VirtualScroller = (function ($, _) {
             container: {type: 'object', customCheck: function (container) {
                 return container instanceof $;
             }},
-            canvas: {type: 'object', customCheck: function (container) {
-                return container instanceof $;
-            }},
 
             /*
                 Optional
             */
+            canvasContainer: {type: ['object', 'undefined'], customCheck: function (canvasContainer) {
+                return canvasContainer === undefined || canvasContainer instanceof $;
+            }},
+            canvas: {type: ['object', 'undefined'], customCheck: function (canvas) {
+                return canvas === undefined || canvas instanceof $;
+            }},
+            scrollContainer: {type: ['object', 'undefined'], customCheck: function (canvasContainer) {
+                return canvasContainer === undefined || canvasContainer instanceof $;
+            }},
+            scrollCanvas: {type: ['object', 'undefined'], customCheck: function (canvas) {
+                return canvas === undefined || canvas instanceof $;
+            }},
+
             rowCount: {type: 'number', default: 1000},
             columnCount: {type: ['number', 'undefined'], default: undefined},
 
             rowHeight: {type: 'number', default: 50},
             columnWidth: {type: ['number', 'undefined'], default: undefined},
+
+            /*
+                If your row elements are more complex, you may need to specify where exactly the columns
+                should be inserted. That's what columnCanvasSelector is all about. You can pass a jQuery
+                selector and we will search for that inside the row element and use it as the canvas
+                for your columns.
+            */
+            columnCanvasSelector: {type: ['string', 'undefined'], default: undefined},
 
             /*
                 preRender values should always be >= 1 if you plan to scroll in that direction.
@@ -1032,12 +1612,37 @@ window.VirtualScroller = (function ($, _) {
             preRenderRows: {type: 'number', default: 1},
             preRenderColumns: {type: 'number', default: 1},
 
+            stickyRows: {type: 'number', default: 0},
+            stickyColumns: {type: 'number', default: 0},
+
+            /*
+                Callbacks
+            */
+            onBeforeRowRemoved: {type: 'function', default: function (params) {
+                return true;
+            }},
+            onBeforeColumnRemoved: {type: 'function', default: function (params) {
+                return true;
+            }},
+            onAfterIndicesChanged: {type: 'function', default: function () {}},
+            onAfterRowCountChanged: {type: 'function', default: function () {}},
+            onAfterColumnCountChanged: {type: 'function', default: function () {}},
+
             dynamicRowHeight: {type: 'boolean', default: false},
             dynamicColumnWidth: {type: 'boolean', default: false},
 
+            /*
+                Pass wether or not the size of the rendered items is accurate before adding them to
+                the dom. You can achieve that by setting the size explicity (row.css('height', ...)).
+                If this is not to case, we have to do a workaround that may cause performance issues
+                or cause flickering.
+            */
+            rowHeightIsAccurate: {type: 'boolean', default: false},
+            columnWidthIsAccurate: {type: 'boolean', default: false},
+
             renderRow: {type: 'function', default: function (params) {
                 return $('<div>')
-                    .text('Item ' + (params.index + 1))
+                    .text('Item ' + (params.rowIndex + 1))
                     .css('height', config.rowHeight + 'px');
             }},
             renderColumn: {type: ['function', 'undefined'], default: undefined}
@@ -1049,24 +1654,196 @@ window.VirtualScroller = (function ($, _) {
         }
 
 
+        /*
+            Instead of scrolling inside config.container, we create sub elements in which we can scroll.
+            The passed canvasContainer will not be scrollable itself but we move the canvas using translate,
+            so it looks like you would be scrolling inside the canvasContainer.
+            The actual scrolling is performed in config.scrollContainer.
+            That way we have complete control over the scrolling and can do things like sticky rows/columns
+            without flickering.
+
+            You can take more control over the structure of the dom (or things like class names) if
+            you pass these elements youself. Expected structure:
+
+            container
+                scrollContainer
+                    scrollCanvas
+                canvasContainer
+                    [stickyCanvasContainer]
+                    canvas
+
+            We used to add the translation to every row but that caused some problems when using z-index
+            inside the scroller as css-transforms create a new stacking context.
+        */
+
+        if (!config.scrollContainer) {
+            config.scrollContainer = $('<div>')
+                .attr('created-by-virtual-scroller', '')
+                .prependTo(config.container);
+        }
+
+        if (!config.scrollCanvas) {
+            config.scrollCanvas = $('<div>')
+                .attr('created-by-virtual-scroller', '')
+                .appendTo(config.scrollContainer);
+        }
+
+        if (!config.canvasContainer) {
+            config.canvasContainer = $('<div>')
+                .attr('created-by-virtual-scroller', '')
+                .appendTo(config.container);
+        }
+
+        if (!config.canvas) {
+            config.canvas = $('<div>')
+                .attr('created-by-virtual-scroller', '')
+                .appendTo(config.canvasContainer);
+        }
+
+
+        config.container.css({
+            position: 'relative',
+            overflow: 'hidden'
+        }).attr('virtual-scroller-container', '')
+
+        config.scrollContainer.css({
+            overflow: 'auto',
+            position: 'relative',
+            zIndex: 2,
+            pointerEvents: 'none',
+            maxHeight: '100%',
+            height: '100%',
+            maxWidth: '100%',
+            width: '100%'
+        }).attr('virtual-scroller-scroll-container', '');
+
+        config.canvasContainer.css({
+            position: 'absolute',
+            top: 0,
+            zIndex: 1,
+            overflow: 'hidden',
+            maxHeight: '100%',
+            height: '100%',
+            maxWidth: '100%',
+            width: '100%'
+        }).attr('virtual-scroller-canvas-container', '')
+
+        /*
+            Problem: The scrollContainer has to be on top of config.canvasContainer in order to be able
+            to respond to scroll events. But config.canvasContainer has to be on top in order to react
+            to mouse events.
+            Solution: We let scrollContainer be on top of config.canvasContainer via zIndex but make
+            it completely unresponsive to events via pointerEvents: 'none'.
+            That way mouse events still reach the config.canvasContainer underneith.
+            Then, we set pointerEvents to 'auto' as soon as the user starts
+            scrolling and only as long as he is scrolling.
+        */
+
+        var scrollContainerIsActive = false;
+        var releaseScrollContainer = _.debounce(function () {
+            config.scrollContainer.css('pointer-events', 'none');
+            scrollContainerIsActive = false;
+        }, 300);
+
+        /*
+            DOMMouseScroll is needed for Firefox
+            http://stackoverflow.com/questions/16788995/mousewheel-event-is-not-triggering-in-firefox-browser
+        */
+        config.container.on(
+            _.map(['mousewheel', 'DOMMouseScroll'], function (eventName) {
+                return eventName + '.' + EVENT_NAMESPACE;
+            }).join(' '),
+            function () {
+                if (!scrollContainerIsActive) {
+                    config.scrollContainer.css('pointer-events', 'auto');
+                    scrollContainerIsActive = true;
+                }
+                releaseScrollContainer();
+            }
+        );
+
+
+        if (config.stickyRows > 0 || config.stickyColumns > 0) {
+            /*
+                This container is needed if you want to center the canvas inside the canvasContainer.
+                You will need to set margin:auto on config.canvas and on config.stickyCanvasContainer.
+            */
+            config.stickyCanvasContainer = $('<div virtual-scroller-sticky-canvas-container>')
+                .css({
+                    position: 'relative',
+                    zIndex: 3
+                })
+                .attr('created-by-virtual-scroller', '')
+                .prependTo(config.canvasContainer);
+        }
+
+        /*
+            Insert stickyColumnsCanvas first, so stickyRowsCanvas is on top of it and things like
+            box-shadows of the columns don't show on top of the sticky row on the top.
+        */
+        if (config.stickyColumns > 0) {
+            config.stickyColumnsCanvas = $('<div virtual-scroller-sticky-columns-canvas>')
+                .css({
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    minWidth: config.stickyColumns * config.columnWidth
+                })
+                .attr('created-by-virtual-scroller', '')
+                .appendTo(config.stickyCanvasContainer);
+        }
+
+        if (config.stickyRows > 0) {
+            config.stickyRowsCanvas = $('<div virtual-scroller-sticky-rows-canvas>')
+                .css({
+                    position: 'absolute',
+                    top: 0,
+                    minHeight: config.stickyRows * config.rowHeight,
+                    width: '100%'
+                })
+                .attr('created-by-virtual-scroller', '')
+                .appendTo(config.stickyCanvasContainer);
+        }
+
+        if (config.stickyRows > 0 && config.stickyColumns > 0) {
+            config.fixedCanvas = $('<div virtual-scroller-fixed-canvas>')
+                .css({
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    minHeight: config.stickyRows * config.rowHeight,
+                    minWidth: config.stickyColumns * config.columnWidth
+                })
+                .attr('created-by-virtual-scroller', '')
+                .appendTo(config.stickyCanvasContainer);
+        }
+
+
+
         var renderManager = RenderManager(config);
 
         // render initial screen
         renderManager.render();
 
         // react to scroll events
-        config.container.on('scroll.' + EVENT_NAMESPACE, _.throttle(function () {
+        config.scrollContainer.on('scroll.' + EVENT_NAMESPACE, _.throttle(function () {
             renderManager.render();
         }, 16, { // aim for 60 fps => 1000 / 60 = 16,666667
             trailing: true
         }));
 
-        // react to resize events
-        $(window).on('resize.' + EVENT_NAMESPACE, _.throttle(function () {
+        var onResize = _.throttle(function () {
+            // We could consider debouncing this more for performance reasons
+            // But there might be edge cases were re-rerendering with an outdated sizeCache
+            // results in the wrong amount of items being rendered. So for now, we'll always do both.
+            renderManager.reevaluateAllSizes(); // sizes of items might have changed due to resizing
             renderManager.render();
         }, 16, { // aim for 60 fps => 1000 / 60 = 16,666667
             trailing: true
-        }));
+        });
+
+        // react to resize events
+        $(window).on('resize.' + EVENT_NAMESPACE, onResize);
 
         // provide API
         var API = {
@@ -1079,12 +1856,21 @@ window.VirtualScroller = (function ($, _) {
             // Call this if the dimensions of one or multiple rendered dom nodes change
             sizeChanged: function (params) {
 
-                params = validateParameters(params, {
+                params = validateParameters(params || {}, {
                     rowHeight: {type: ['number', 'undefined'], default: undefined},
                     columnWidth: {type: ['number', 'undefined'], default: undefined},
                     rowIndex: {type: ['number', 'undefined'], default: undefined},
                     columnIndex: {type: ['number', 'undefined'], default: undefined}
                 });
+
+                if (_.every(params, _.isUndefined)) {
+                    return onResize();
+                }
+
+
+                /*
+                    For static sizes
+                */
 
                 if (params.rowHeight !== undefined) {
                     config.rowHeight = params.rowHeight;
@@ -1094,11 +1880,16 @@ window.VirtualScroller = (function ($, _) {
                     config.columnWidth = params.columnWidth;
                 }
 
+
+                /*
+                    For dynamic sizes
+                */
+
                 if (params.rowIndex !== undefined && params.columnIndex === undefined) {
                     if (!config.dynamicRowHeight) {
                         throw new Error('Virtual Scroller: You can\'t update the height of specific rows in static mode. Please set dynamicRowHeight to true in order to do that. Or pass rowHeight if the height of all rows changed.');
                     }
-                    renderManager.updateRowSizeAtIndex({
+                    renderManager.reevaluateRowSizeAtIndex({
                         rowIndex: params.rowIndex
                     });
                 }
@@ -1107,7 +1898,7 @@ window.VirtualScroller = (function ($, _) {
                     if (!config.dynamicColumnWidth) {
                         throw new Error('Virtual Scroller: You can\'t update the height of specific columns in static mode. Please set dynamicColumnWidth to true in order to do that. Or pass columnWidth if the width of all columns changed.');
                     }
-                    renderManager.updateColumnSizeAtIndex({
+                    renderManager.reevaluateColumnSizeAtIndex({
                         rowIndex: params.rowIndex, // might be undefined
                         columnIndex: params.columnIndex
                     });
@@ -1117,8 +1908,6 @@ window.VirtualScroller = (function ($, _) {
             },
 
             // Call these to make the scroller move dom nodes
-            moveItem: function (params) {},
-            addItem: function (params) {},
             removeRowAt: function (params) {
                 params = validateParameters(params, {
                     rowIndex: {type: 'number'}
@@ -1166,16 +1955,26 @@ window.VirtualScroller = (function ($, _) {
                     });
                 }
 
-                config.container.animate({
+                config.scrollContainer.animate({
                     scrollTop: scrollTop,
                     scrollLeft: scrollLeft
                 }, params.animationDuration);
             },
             rerender: function (params) {
+
+                params = validateParameters(params, {
+                    newRowCount: {type: 'number', default: config.rowCount},
+                    newColumnCount: {type: 'number', default: config.columnCount}
+                });
+
+                config.rowCount = params.newRowCount;
+                config.columnCount = params.newColumnCount;
+
                 API.scrollTo({
                     rowIndex: 0,
                     columnIndex: 0
                 });
+
                 renderManager.resetState();
                 renderManager.render();
             },
@@ -1184,19 +1983,223 @@ window.VirtualScroller = (function ($, _) {
                 renderManager.render();
             },
 
-            destroy: function () {
-                config.container.off('.' + EVENT_NAMESPACE);
-                $(window).off('.' + EVENT_NAMESPACE);
-                renderManager.resetState();
-                renderManager = null;
-                config.canvas
-                    .empty()
-                    .css('height', '');
-            }
+            destroy: (function () {
+
+                var isDestroyed = false;
+
+                return function () {
+
+                    if (isDestroyed) {
+                        return;
+                    }
+
+                    config.container
+                        .add(config.canvasContainer)
+                        .add(config.canvas)
+                        .add(config.scrollContainer)
+                        .add(config.scrollCanvas)
+                        .attr('style', '');
+
+                    config.canvas.empty();
+                    config.container.find('[created-by-virtual-scroller]').remove();
+
+                    config.container.off('.' + EVENT_NAMESPACE);
+                    config.scrollContainer.off('.' + EVENT_NAMESPACE);
+
+
+                    $(window).off('.' + EVENT_NAMESPACE);
+                    renderManager.resetState();
+                    renderManager = null;
+                    config.canvas
+                        .empty()
+                        .css('height', '');
+
+                    isDestroyed = true;
+                };
+            }()),
+
+            isRowRendered: renderManager.isRowRendered,
+            isColumnRendered: renderManager.isColumnRendered,
+
+
         };
 
         return API;
 
+    };
+
+
+    /*
+        Data Adapter
+    */
+
+    VirtualScroller.DataAdapter = function (config) {
+
+        config = validateParameters(config, {
+            loadRange: {type: 'function'}
+        });
+
+        var Range = function (params) {
+
+            params = validateParameters(params, {
+                start: {type: 'number'},
+                end: {type: 'number'}
+            });
+
+            var range = {
+                start: params.start,
+                end: params.end
+            };
+
+            var internalPromise = config.loadRange(range);
+
+            range.getPromiseForIndex = function (params) {
+
+                params = validateParameters(params, {
+                    index: {type: 'number'}
+                });
+
+                return internalPromise.then(function (data) {
+                    return (_.isArray(data) && data[params.index - range.start]) || undefined;
+                });
+            };
+
+            return range;
+        };
+
+        var dataDapter = {};
+
+        var requestedRanges = [];
+
+        var getRangeForIndex = function (params) {
+
+            params = validateParameters(params, {
+                ranges: {type: 'array'},
+                index: {type: 'number'}
+            });
+
+            return _.find(params.ranges, function (range) {
+                return range.start <= params.index && range.end >= params.index;
+            });
+        };
+
+        dataDapter.get = function (params) {
+
+            params = validateParameters(params, {
+                index: {type: 'number'}
+            });
+
+            var range = getRangeForIndex({ranges: requestedRanges, index: params.index});
+            if (!range) {
+
+                range = Range({
+                    start: params.index,
+                    end: params.index + 25
+                });
+
+                requestedRanges = requestedRanges.concat(range);
+
+            }
+
+            return range.getPromiseForIndex({index: params.index});
+
+        };
+
+        dataDapter.reset = function () {
+            requestedRanges = [];
+        };
+
+
+        return dataDapter;
+    };
+
+
+    /*
+        Dom Cache Adapter
+        TODO: React to all dynamic changes like rowRemoved, rowAdded, rerender, ...
+    */
+
+//    VirtualScroller.DomCacheAdapter = function (scrollerConfig) {
+//
+//        var rowCache = {};
+//        var columnCache = {};
+//
+//        var oldOnBeforeRowRemoved = scrollerConfig.onBeforeRowRemoved;
+//        scrollerConfig.onBeforeRowRemoved = function (params) {
+//            if (oldOnBeforeRowRemoved) {
+//                oldOnBeforeRowRemoved(params);
+//            }
+//            rowCache[params.rowIndex] = params.row;
+//            params.row.detach();
+//            params.row.find('[virtual-scroller-index]').each(function (index, column) {
+//                column = $(column);
+//                var columnIndex = parseInt(column.attr('virtual-scroller-index'));
+//                columnCache[params.rowIndex] = columnCache[params.rowIndex] || {};
+//                columnCache[params.rowIndex][columnIndex] = column;
+//            });
+//            return false;
+//        };
+//
+//        var oldRenderRow = scrollerConfig.renderRow;
+//        scrollerConfig.renderRow = function (params) {
+//            if (rowCache[params.rowIndex]) {
+//                return rowCache[params.rowIndex];
+//            }
+//            return oldRenderRow(params);
+//        };
+//
+//        if (scrollerConfig.renderColumn) {
+//
+//            var oldOnBeforeColumnRemoved = scrollerConfig.onBeforeColumnRemoved;
+//            scrollerConfig.onBeforeColumnRemoved = function (params) {
+//                if (oldOnBeforeRowRemoved) {
+//                    oldOnBeforeRowRemoved(params);
+//                }
+//                columnCache[params.rowIndex] = columnCache[params.rowIndex] || {};
+//                columnCache[params.rowIndex][params.columnIndex] = params.column;
+//                params.column.detach();
+//                return false;
+//            };
+//
+//            var oldRenderColumn = scrollerConfig.renderColumn;
+//            scrollerConfig.renderColumn = function (params) {
+//                if (columnCache[params.rowIndex] && columnCache[params.rowIndex][params.columnIndex]) {
+//                    return columnCache[params.rowIndex][params.columnIndex];
+//                }
+//                return oldRenderColumn(params);
+//            };
+//        }
+//
+//
+//        return scrollerConfig;
+//    };
+
+
+    /*
+        Keep in Dom Adapter
+    */
+
+    VirtualScroller.KeepInDomAdapter = function (scrollerConfig, config) {
+        /*
+            Idee:
+            rowIndex 1 soll im dom behalten werden (weil er grad per drag and drop bewegt wird)
+            onBeforeRowRemoved => return false for index 1, cache row
+            renderRow => return cached row for index 1
+
+            Muss wahrscheinlich zu einem anderen Canvas hinzugefügt werden.
+            Sonst wird das folgende passieren
+            // init:
+            0,1,2,3,4,5
+            // scroll right:
+            1,2,3,4,5,6
+            1,2,3,4,5,6,7 // keep 1 in dom
+            1,3,4,5,6,7,8
+            // scroll left:
+            2,1,3,4,5,6,7 // 2 is prepended => 1 is at the wrong place
+
+        */
+
+        return scrollerConfig;
     };
 
 

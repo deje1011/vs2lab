@@ -87,11 +87,7 @@ html, body{
     position: relative;
 }
 
-.timeline-scroll-container {
-    overflow: scroll;
-    flex: 1;
-    max-height: 100%;
+.timeline-container {
     height: 100%;
- }
-
-
+    max-height: 100%;
+}
