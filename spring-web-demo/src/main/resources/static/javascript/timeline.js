@@ -40,4 +40,38 @@
     });
 
 
+
+
+    /*
+        Create posts
+    */
+
+    var $createPostInput = $('#create-post-input');
+    var $createPostButton = $('#create-post-button');
+    var createPost = function () {
+        var content = $createPostInput.val();
+        console.log('content:', content);
+        if (!content) {
+            return;
+        }
+        $createPostInput.val('');
+        return $.ajax({
+            url: 'api/users/1/timeline/posts',
+            method: 'POST',
+            data: escape(content)
+        }).fail(function () {
+            alert('Ups, that didn\'t work. Please try again.');
+            $createPostInput.val(content);
+        });
+    };
+
+    $createPostInput.on('keydown', function (event) {
+        var keyCode = event.keyCode || event.which || 0;
+        if (keyCode === 13)  { // Enter
+            createPost();
+        }
+    });
+
+    $createPostButton.on('click', createPost);
+
 }(jQuery));

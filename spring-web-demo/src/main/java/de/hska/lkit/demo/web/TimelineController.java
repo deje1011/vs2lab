@@ -1,11 +1,7 @@
 package de.hska.lkit.demo.web;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Created by jessedesaever on 24.10.16.
@@ -27,7 +23,17 @@ public class TimelineController {
         return posts;
     }
 
-    // TODO: POST post
+    /*
+    * Returns a boolean to indicate success for now as I don't know how to pass errors to the client.
+    * Accepts a string containing the content of the new post as the request body.
+    * */
+    @RequestMapping(value = "/api/users/{userId}/timeline/posts", method = RequestMethod.POST)
+    public @ResponseBody boolean createTimelinePostForUser (@PathVariable int userId, @RequestBody String content) {
+        System.out.println("POST WAS CALLED: " + content);
+        return true;
+    }
+
+
     // TODO: DELETE post
     // TODO: PUT post (?)
 }
