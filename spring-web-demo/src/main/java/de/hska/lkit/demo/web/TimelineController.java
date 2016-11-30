@@ -14,6 +14,12 @@ public class TimelineController {
     }
 
 
+    @RequestMapping(value = "/api/users/{userId}/timeline/posts/count", method = RequestMethod.GET)
+    public @ResponseBody int countTimelinePostsForUser (@PathVariable int userId) {
+        return 1000;
+    }
+
+
     @RequestMapping(value = "/api/users/{userId}/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
     public @ResponseBody Post[] getTimelinePostsForUser (@PathVariable int userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
         Post[] posts = new Post[limit];
