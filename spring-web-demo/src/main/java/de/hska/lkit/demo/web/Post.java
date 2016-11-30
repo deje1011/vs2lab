@@ -4,11 +4,14 @@ package de.hska.lkit.demo.web;
  * Created by jessedesaever on 10.11.16.
  */
 public class Post {
+
+    private static int idCounter = 0;
+
     private String content;
     private int id;
 
     public Post (String content) {
-        this.id = 1; // TODO: Generate id
+        this.id = ++Post.idCounter;
         this.content = content;
     }
 

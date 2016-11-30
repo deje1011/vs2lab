@@ -32,12 +32,26 @@ public class TimelineController {
             for (int i = 0; i < limit; i++) {
                 posts[i] = this.posts.get(i + offset);
             }
-            
+
             return posts;
         }
 
         public void addPost (String userId, String content) {
             this.posts.add(0, new Post(content));
+        }
+
+        public void deletePost (String postId) {
+            int index = -1;
+            int numberOfPosts = this.countTimelinePosts(""); // TODO: userId für Authorization
+            for (int i = 0; i < numberOfPosts && index == -1; i++) {
+                Post post = this.posts.get(i);
+                if (post.getId() == new Integer(postId)) {
+                    index = i;
+                }
+            }
+            if (index != -1) {
+                this.posts.remove(index);
+            }
         }
 
         public int countTimelinePosts (String userId) {
@@ -71,12 +85,18 @@ public class TimelineController {
     * */
     @RequestMapping(value = "/api/users/{userId}/timeline/posts", method = RequestMethod.POST)
     public @ResponseBody boolean createTimelinePostForUser (@PathVariable String userId, @RequestBody String content) {
-        System.out.println("GOT NEW POST:" + content);
         this.database.addPost(userId, content);
         return true;
     }
 
 
-    // TODO: DELETE post
+
+    @RequestMapping(value = "/api/posts/{postId}", method = RequestMethod.DELETE)
+    public @ResponseBody boolean createTimelinePostForUser (@PathVariable String postId) {
+        System.out.println("DELETE " + postId);
+        this.database.deletePost(postId);
+        return true;
+    }
+
     // TODO: PUT post (?)
 }

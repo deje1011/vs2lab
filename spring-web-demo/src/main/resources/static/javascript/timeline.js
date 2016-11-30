@@ -27,8 +27,9 @@
           renderRow: function (params) {
               var $row = $rowPrototype.clone();
               $row.find('.timeline-post-content').text('Loading...');
-              dataAdapter.get({index: params.rowIndex}).then(function (item) {
-                  $row.find('.timeline-post-content').text(item.content);
+              dataAdapter.get({index: params.rowIndex}).then(function (post) {
+                  $row.attr('timeline-post-id', post.id);
+                  $row.find('.timeline-post-content').text(post.content);
               }).always(function () {
                   // faster clean up (garbage collector)
                   $row = null;
@@ -51,7 +52,17 @@
         });
     };
 
+    var rerenderViewport = function () {
+        dataAdapter.reset();
+        return countPosts().then(function (rowCount) {
+            virtualScroller.rerenderViewport({newRowCount: rowCount});
+        });
+    };
 
+
+    /*
+        Initial render / load initial data
+    */
     rerender();
 
 
@@ -87,5 +98,29 @@
     });
 
     $createPostButton.on('click', createPost);
+
+
+    /*
+        Delete Posts
+    */
+
+    $container.on('click', '.timeline-post-delete-button', function (event) {
+
+        event.preventDefault();
+
+        var $button = $(this);
+        var id = parseInt($button.closest('[timeline-post-id]').attr('timeline-post-id'));
+        var index = parseInt($button.closest('[virtual-scroller-index]').attr('virtual-scroller-index'));
+
+        virtualScroller.removeRowAt({rowIndex: index});
+        return $.ajax({
+            url: 'api/posts/' + id,
+            method: 'DELETE'
+        }).fail(function () {
+            alert('Ups, that didn\'t work. Please try again.');
+            rerenderViewport();
+        });
+
+    });
 
 }(jQuery));
