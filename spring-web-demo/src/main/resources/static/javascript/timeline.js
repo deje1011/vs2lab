@@ -16,6 +16,27 @@
         }
     });
 
+    var virtualScroller = VirtualScroller({
+          container: $container,
+          canvasContainer: $canvasContainer,
+          canvas: $canvas,
+          rowHeight: 130,
+          rowCount: 0,
+          dynamicRowHeight: true,
+          preRenderRows: 5,
+          renderRow: function (params) {
+              var $row = $rowPrototype.clone();
+              $row.find('.timeline-post-content').text('Loading...');
+              dataAdapter.get({index: params.rowIndex}).then(function (item) {
+                  $row.find('.timeline-post-content').text(item.content);
+              }).always(function () {
+                  // faster clean up (garbage collector)
+                  $row = null;
+              });
+              return $row;
+          }
+    });
+
     var countPosts = function () {
         return $.ajax({
             url: 'api/users/1/timeline/posts/count',
@@ -23,30 +44,15 @@
         });
     };
 
-
-    countPosts().then(function (rowCount) {
-        VirtualScroller({
-            container: $container,
-            canvasContainer: $canvasContainer,
-            canvas: $canvas,
-            rowHeight: 200,
-            rowCount: rowCount,
-            dynamicRowHeight: true,
-            preRenderRows: 5,
-            renderRow: function (params) {
-                var $row = $rowPrototype.clone();
-                $row.find('.media-heading').first().text('Loading...');
-                dataAdapter.get({index: params.rowIndex}).then(function (item) {
-                    $row.find('.media-heading').first().text(item.content);
-                }).always(function () {
-                    // faster clean up (garbage collector)
-                    $row = null;
-                });
-                return $row;
-            }
+    var rerender = function () {
+        dataAdapter.reset();
+        return countPosts().then(function (rowCount) {
+            virtualScroller.rerender({newRowCount: rowCount});
         });
-    });
+    };
 
+
+    rerender();
 
 
 
@@ -66,8 +72,8 @@
         return $.ajax({
             url: 'api/users/1/timeline/posts',
             method: 'POST',
-            data: escape(content)
-        }).fail(function () {
+            data: content
+        }).then(rerender).fail(function () {
             alert('Ups, that didn\'t work. Please try again.');
             $createPostInput.val(content);
         });
