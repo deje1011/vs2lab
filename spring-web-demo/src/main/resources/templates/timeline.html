@@ -35,7 +35,7 @@
         </div>
     </div>
 </nav>
-<div class="container-content">
+<div class="container-content timeline-container-content">
     <h3 class="title">Global Timeline</h3>
 
     <div class="input-group">
@@ -44,139 +44,54 @@
               <button class="btn btn-default" type="button">Post</button>
             </span>
     </div>
-    <div class="chronik">
 
-        <div class="well">
-            <div class="media">
 
-                <div class="media-left">
-                    <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
+    <div class="timeline-scroll-container">
+
+        <div class="timeline-canvas chronic"></div>
+        <div class="timeline-helper-canvas chronic" style="visibility:hidden"></div>
+
+        <script type="text/template" class="timeline-template">
+            <div class="timeline-row" style="padding-bottom:20px">
+                <div class="well" style="margin: 0">
+                    <div class="media">
+
+                        <div class="media-left">
+                            <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
+                        </div>
+                        <div class="media-body">
+                            <h4 class="media-heading">Hannelore Hotpink</h4>
+                            <h6 class="media-heading">01.11.2016 18:00 Uhr</h6>
+                            <p>Maunzerles Katzenschnupfen:
+                                Katzenschnupfen ist eine Sammelbezeichnung für ansteckende Erkrankungen der Atemwege und der
+                                Schleimhäute des Kopfes bei Katzen. Synonym verwendet werden die Bezeichnungen infektiöse
+                                Katzenrhinitis, Katzenpneumonitis, cat flu und Rhinotracheitis infectiosa felis.
+
+                                Es handelt sich hierbei also um einen Symptomkomplex, der durch unterschiedliche Erreger
+                                hervorgerufen wird. Er betrifft Nase, Maulhöhle und Augen. Beteiligte Erreger sind verschiedene
+                                Viren (Herpes- und Caliciviren) und Bakterien (Chlamydien, Bordetellen und Mykoplasmen). Da die
+                                Erreger sich gegenseitig begünstigen und damit parallel auftreten können und Behandlung und
+                                Bekämpfung dieser Erkrankungen etliche Gemeinsamkeiten aufweisen, ist diese Sammelbezeichnung
+                                dennoch berechtigt.#maunzerleischkrank #gutebesserungmaunzerle #katzenschnupfen
+                                #maunzerledupackstdas #ichliebemeinmaunzerle #schützteurekatzenvorkatzenschnupfen
+                                #maunzerlehatsharterwischt #hatschiiiii #aufdersuchenachkatzentempos #richtigersherlock
+                            </p>
+                        </div>
+
+                    </div>
                 </div>
-                <div class="media-body">
-                    <h4 class="media-heading">Hannelore Hotpink</h4>
-                    <h6 class="media-heading">01.11.2016 18:00 Uhr</h6>
-                    <p>Maunzerles Katzenschnupfen:
-                        Katzenschnupfen ist eine Sammelbezeichnung für ansteckende Erkrankungen der Atemwege und der
-                        Schleimhäute des Kopfes bei Katzen. Synonym verwendet werden die Bezeichnungen infektiöse
-                        Katzenrhinitis, Katzenpneumonitis, cat flu und Rhinotracheitis infectiosa felis.
-
-                        Es handelt sich hierbei also um einen Symptomkomplex, der durch unterschiedliche Erreger
-                        hervorgerufen wird. Er betrifft Nase, Maulhöhle und Augen. Beteiligte Erreger sind verschiedene
-                        Viren (Herpes- und Caliciviren) und Bakterien (Chlamydien, Bordetellen und Mykoplasmen). Da die
-                        Erreger sich gegenseitig begünstigen und damit parallel auftreten können und Behandlung und
-                        Bekämpfung dieser Erkrankungen etliche Gemeinsamkeiten aufweisen, ist diese Sammelbezeichnung
-                        dennoch berechtigt.#maunzerleischkrank #gutebesserungmaunzerle #katzenschnupfen
-                        #maunzerledupackstdas #ichliebemeinmaunzerle #schützteurekatzenvorkatzenschnupfen
-                        #maunzerlehatsharterwischt #hatschiiiii #aufdersuchenachkatzentempos #richtigersherlock
-                    </p>
-                </div>
-
             </div>
-        </div>
-
-        <div class="well">
-            <div class="media">
-
-                <div class="media-left">
-                    <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
-                </div>
-                <div class="media-body">
-                    <h4 class="media-heading">Frederike Fuchsrot</h4>
-                    <h6 class="media-heading">01.01.2015 21:30 Uhr</h6>
-                    <p>Ein gemütlicher Abend mit der Familie ist doch einfach mal wieder schön #familyisthebest #iloveit
-                        #kekseessen #sbäuchlefreutsich
-                    </p>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="well">
-            <div class="media">
-
-                <div class="media-left">
-                    <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
-                </div>
-                <div class="media-body">
-                    <h4 class="media-heading">Karl Karottenblau</h4>
-                    <h6 class="media-heading">01.08.2014 23:00 Uhr</h6>
-                    <p>Alle meine Entchen schwimmen auf dem See, schwimmen auf dem See, Köpfchen in das Wasser Schwänzchen
-                        in die Höh' #blubbblubbblubb #schnatterschnatter #kinderlieder #ohrwurm #einfachimmerwiedertoll
-                    </p>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="well">
-            <div class="media">
-
-                <div class="media-left">
-                    <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
-                </div>
-                <div class="media-body">
-                    <h4 class="media-heading">Agnes Amarettobraun</h4>
-                    <h6 class="media-heading">30.01.2013 17:89 Uhr</h6>
-                    <p>Verkaufe mein neues E-Bike, ist in super Zustand, Farbe natürlich amarettobraun für leute bis 300 kg
-                        auch für oldies geeignet meldet euch einfach bei mir dann können wir n kaffee trinken gehen und mal
-                        ne runde fahren #Wettrennenmitferrari #ebikegewinnt #proschekannmirgarnichts #raceddenhügelhoch
-                    </p>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="well">
-            <div class="media">
-
-                <div class="media-left">
-                    <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
-                </div>
-                <div class="media-body">
-                    <h4 class="media-heading">Liselotte Leguanlolli</h4>
-                    <h6 class="media-heading">07.12.2012 20:00 Uhr</h6>
-                    <p>Der absolut geilste Reisetip Heian Jingu Shrine: Im Herzen Japans gelegen gehört Kyoto bei
-                        Japantouristen fest ins Programm. Zu den Sehenswürdigkeiten der Stadt zählen der Kaiserpalast,
-                        zahlreiche Tempel und Schreine sowie weitere berühmte und historische Stätten – 17 davon gehören
-                        sogar zum UNESCO-Weltkulturerbe. Das macht Kyoto zu einem beliebten Reiseziel, das lebendige
-                        Tradition und die Ästhetik des alten Japans vermittelt. Hier finden Sie zahlreiche traditionell
-                        japanische Hotels und anspruchsvolle Gastronomie, in der Sie die raffinierte Küche von Kyoto
-                        genießen können. Was Kyoto zu bieten hat, finden Sie sonst in keiner Stadt der Welt.
-                        #travelaroundtheworld #asia #japan #besttimeever #takemeback
-                    </p>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="well">
-            <div class="media">
-
-                <div class="media-left">
-                    <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
-                </div>
-                <div class="media-body">
-                    <h4 class="media-heading">Gustav Gänseblümchengelb</h4>
-                    <h6 class="media-heading">01.01.2011 20:00 Uhr</h6>
-                    <p>Seit die Merkel drann ist,geht es berg ab mit deutschland..ichfinde es schade und hätte auch nie
-                        gedacht ,das die meisten deutsche verlehrnt haben 1+1 zusammen zu zählen. Seit die merkel drann ist
-                        wandelt sie deutschland zu alte ddr um. 1 Sie hat unser hauptstadt weggenommen,ohne uns zu fragen
-                        und dann noch auf unsere kosten.2 haben wir für den aufbau der ddr zahlen durfen. und nicht mehr für
-                        brd, dem entsprechen siet brd aus. 3 die ein euro jobs 4 rauchern mussten in gerennte raumen,dannach
-                        total rauch verbot,obwohl wir genau soviel bezahlen wie die nichtrauchern. 5 in deutchland wohnen
-                        50% turken.40% deutche und10% andere ausländer. 6 ist die kriminalität emmens gestiegen.wo 90%
-                        turken sind.sogar im knast leben mehr turken als deutsche. 7 wollen die noch mehr ausländer nach
-                        deutschland holen für arbeit #ichnickskonnendeutch
-                    </p>
-                </div>
-
-            </div>
-        </div>
-
+        </script>
 
     </div>
 
 
 </div>
+
+<script src="../javascript/lodash.min.js"></script>
+<script src="../javascript/jquery.min.js"></script>
+<script src="../javascript/virtual-scroller.js"></script>
+<script src="../javascript/timeline.js"></script>
+
 </body>
 </html>
