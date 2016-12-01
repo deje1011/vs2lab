@@ -1,12 +1,9 @@
 package de.hska.lkit.demo.web;
 
-import de.hska.lkit.demo.web.data.model.Userx;
+import de.hska.lkit.demo.web.data.model.UserX;
 import de.hska.lkit.demo.web.data.repo.DataRepository;
-import org.apache.tomcat.jni.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -23,25 +20,31 @@ public class RegisterController {
     public RegisterController(DataRepository repository){
         super();
         dataRepository = repository;
-
     }
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public String register(Userx user) {
-     //   model.addAttribute("user", new Userx());
-        if(dataRepository.isUserNameUnique(user.getName())){
-        if(!user.getName().isEmpty() && !user.getPassword().isEmpty()){
-            Userx userx = new Userx(user.getName(), user.getPassword());
+
+
+    // Hier erhält der Server das vom Client ausgefüllte Client Objekt dass er bei der register funktion bekommen hat.
+    @RequestMapping(value = "/registerU", method = RequestMethod.POST)
+    public String registerU(UserX userX) {
+     //   model.addAttribute("userX", new UserX());
+        if(dataRepository.isUserNameUnique(userX.getName())){
+        if(!userX.getName().isEmpty() && !userX.getPassword().isEmpty()){
+            UserX userx = new UserX(userX.getName(), userX.getPassword());
             dataRepository.registerUser(userx);
                 return "login";
             }
         }else{
-            System.out.print("user name not unique");
+            System.out.print("userX name not unique");
         }
 
-        return "login";
+        //fehlerfall
+        return "registration";
     }
+
+    // Wenn du die Seite /register aufrufst dann gebe die html registration zurück
+    // Der Client will ja auf registU daten an den Server schicken, darum brauch der Client auch schon ein UserX objekt
     @RequestMapping(value = "/register")
-    public String deliverRegistrationTemplate() {
+    public String register(UserX userX) {
         return "registration";
     }
 }

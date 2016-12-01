@@ -1,11 +1,9 @@
 package de.hska.lkit.demo.web;
 
-import de.hska.lkit.demo.web.data.model.Userx;
+import de.hska.lkit.demo.web.data.model.UserX;
 import de.hska.lkit.demo.web.data.repo.DataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -23,19 +21,23 @@ public class LoginController {
         dataRepository = repository;
 
     }
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public String login(Userx user) {
-        if(!user.getName().isEmpty() && !user.getPassword().isEmpty()){
+    @RequestMapping(value = "/loginU", method = RequestMethod.POST)
+        public String loginU(UserX userX) {
+        if(!userX.getName().isEmpty() && !userX.getPassword().isEmpty()){
 
-            if(dataRepository.isPasswordValid(user.getName(), user.getPassword())){
+            if(dataRepository.isPasswordValid(userX.getName(), userX.getPassword())){
 
                 return "timeline";
             }else{
                 System.out.print("login false");
             }
-
         }
 
+        return "login";
+    }
+
+    @RequestMapping(value = "/login")
+    public String login(UserX userX) {
         return "login";
     }
 }
