@@ -1,8 +1,8 @@
 package de.hska.lkit.demo.web.data.repo;
 
 import de.hska.lkit.demo.web.data.model.Post;
-import de.hska.lkit.demo.web.data.model.User;
-import java.util.Map;
+import de.hska.lkit.demo.web.data.model.Userx;
+
 import java.util.Set;
 
 /**
@@ -16,7 +16,7 @@ public interface DataRepository {
      * Adds user to db.
      * @param user user to add
      */
-    void registerUser(User user);
+    void registerUser(Userx user);
 
     /**
      * Checks if username has already been taken.
@@ -41,50 +41,48 @@ public interface DataRepository {
     String getUserId(String name);
 
     /**
-     * Returns a set of all user ids.
+     * Returns a sorted set of all user ids. Ids are sorted by the first 4 letters of a user name.
      * @return users
      */
-    Set<User> getAllUsers();
+    Set<String> getAllUsers();
 
     /**
      * Returns user with the given id.
      * @param id id of user
      * @return certain user
      */
-    User getUserById(String id);
+    Userx getUserById(String id);
 
     /**
      * Returns a set of user ids followers of a certain user.
-     * @param id id of user
+     * @param userId id of user
      * @return followers of user
      */
-    Set<String> getAllFollowers(String id);
+    Set<String> getAllFollowers(String userId);
 
     /**
      * Returns a set of user ids followed by certain user.
-     * @param id id of user
+     * @param userId id of user
      * @return followed by user
      */
-    Set<String> getAllFollowed(String id);
+    Set<String> getAllFollowed(String userId);
 
     /**
-     * Adds the current user to the set of followers of a certain user
-     * and adds a certain user to the set of followed of the current user.
+     * Adds a follower.
      * @param currentUserId user who is following another user
      * @param userToFollowId user who is being followed.
      */
     void addFollower(String currentUserId, String userToFollowId);
 
     /**
-     * Removes the current user from the set of followers of a certain user
-     * and removes a certain user from the set of followed of the current user.
+     * Removes a follower.
      * @param currentUserId user who is unfollowing another user
      * @param userToUnfollow user who is being unfollowed
      */
     void removeFollower(String currentUserId, String userToUnfollow);
 
     /**
-     * Returns a set of all global post ids.
+     * Returns a sorted set of all global post ids.
      * @return set of all global posts
      */
     Set<String> getAllGlobalPosts();
@@ -97,9 +95,7 @@ public interface DataRepository {
     Set<String> getTimelinePosts(String id);
 
     /**
-     * Adds a post to the timeline set of a certain user.
-     * Adds a post to the timeline sets of all followers.
-     * Adds a post to the global posts set.
+     * Adds a post.
      * @param post post to add.
      */
     void addPost(Post post);

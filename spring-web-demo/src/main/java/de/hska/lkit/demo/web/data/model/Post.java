@@ -11,10 +11,10 @@ public class Post implements Serializable{
 
     private String id;
     private String message;
-    private User user;
+    private Userx user;
     private Date time;
 
-    public Post(User user, String message, Date time){
+    public Post(Userx user, String message, Date time){
         this.message = message;
         this.user = user;
         this.time = time;
@@ -36,11 +36,11 @@ public class Post implements Serializable{
         this.message = message;
     }
 
-    public User getUser() {
+    public Userx getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(Userx user) {
         this.user = user;
     }
 

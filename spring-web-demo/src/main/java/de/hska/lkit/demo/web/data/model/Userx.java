@@ -1,29 +1,26 @@
 package de.hska.lkit.demo.web.data.model;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 /**
- *
- * Created by Marina on 20.11.2016.
+ * Created by Marina on 29.11.2016.
  */
-public class User implements Serializable {
+public class Userx implements Serializable{
 
     private String id;
     private String name;
     private String password;
     private Set<String> follows;
     private Set<String> followed;
-    private List<Post> posts;
+    private Set<String> posts;
     private String image;
     private String session;
 
-    public User(String name, String password){
+    public Userx(String name, String password){
         this.name = name;
         this.password = password;
     }
-
     public String getId() {
         return id;
     }
@@ -48,27 +45,27 @@ public class User implements Serializable {
         this.password = password;
     }
 
-    public Set getFollows() {
+    public Set<String> getFollows() {
         return follows;
     }
 
-    public void setFollows(Set follows) {
+    public void setFollows(Set<String> follows) {
         this.follows = follows;
     }
 
-    public Set<String> getFollowedBy() {
+    public Set<String> getFollowed() {
         return followed;
     }
 
-    public void setFollowedBy(Set<String> followedBy) {
-        this.followed = followedBy;
+    public void setFollowed(Set<String> followed) {
+        this.followed = followed;
     }
 
-    public List<Post> getPosts() {
+    public Set<String> getPosts() {
         return posts;
     }
 
-    public void setPosts(List<Post> posts) {
+    public void setPosts(Set<String> posts) {
         this.posts = posts;
     }
 
@@ -87,4 +84,6 @@ public class User implements Serializable {
     public void setSession(String session) {
         this.session = session;
     }
+
+
 }
