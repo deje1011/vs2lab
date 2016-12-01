@@ -17,6 +17,9 @@ public class Userx implements Serializable{
     private String image;
     private String session;
 
+    public Userx(){
+
+    }
     public Userx(String name, String password){
         this.name = name;
         this.password = password;

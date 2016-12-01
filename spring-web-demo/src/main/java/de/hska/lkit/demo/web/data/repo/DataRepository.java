@@ -83,12 +83,18 @@ public interface DataRepository {
 
     /**
      * Returns a sorted set of all global post ids.
+     *
+     * limit
+     * offset
      * @return set of all global posts
      */
     Set<String> getAllGlobalPosts();
 
     /**
      * Return a set of all timeline post ids of a certain user.
+     *
+     * limit: anzahl posts
+     * offset: wo anfangen.
      * @param id id of user
      * @return set of posts
      */
