@@ -12,6 +12,8 @@
             return $.ajax({
                 url: 'api/users/1/timeline/posts?offset=' + range.start + '&limit=' + (range.end - range.start) + 1,
                 method: 'GET'
+            }).then(function (posts) {
+                return posts.reverse();
             });
         }
     });
@@ -28,8 +30,11 @@
               var $row = $rowPrototype.clone();
               $row.find('.timeline-post-content').text('Loading...');
               dataAdapter.get({index: params.rowIndex}).then(function (post) {
+                  console.log('loaded', post);
                   $row.attr('timeline-post-id', post.id);
-                  $row.find('.timeline-post-content').text(post.content);
+                  $row.find('.timeline-post-content').text(post.message);
+              }).fail(function () {
+                $row.find('.timeline-post-content').text('An Error occurred while loading this post.');
               }).always(function () {
                   // faster clean up (garbage collector)
                   $row = null;

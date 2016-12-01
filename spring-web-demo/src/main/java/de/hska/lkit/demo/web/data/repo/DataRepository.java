@@ -100,6 +100,12 @@ public interface DataRepository {
      */
     void addPost(Post post);
 
+    /**
+     * Deletes a post.
+     * @param post post to delete.
+     */
+    void deletePost(Post post);
+
 
     /**
      * Returns post with the given id.

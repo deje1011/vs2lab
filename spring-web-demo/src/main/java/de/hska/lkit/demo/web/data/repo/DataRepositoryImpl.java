@@ -290,7 +290,7 @@ public class DataRepositoryImpl implements DataRepository {
         post.setId(id);
 
         String key = Constants.POST_KEY_PREFIX + post.getId();
-       // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
+        // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUser().getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
@@ -315,6 +315,33 @@ public class DataRepositoryImpl implements DataRepository {
     }
 
 
+    @Override
+    public void deletePost(Post post) {
+
+        String key = Constants.POST_KEY_PREFIX + post.getId();
+        // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_USER, post.getUser().getId());
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
+
+
+
+        ////add post to users post list
+        String userPostsKey = Constants.USER_KEY_PREFIX + post.getUser().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
+        setOperations.remove(userPostsKey, post.getId());
+
+
+        ////add post to global post list
+
+        //setOperations.add(Constants.KEY_GET_ALL_GLOBAL_POSTS, post.getId());
+
+        String score = Integer.toString(post.getTime().getYear()) + Integer.toString(post.getTime().getMonth())
+                + Integer.toString(post.getTime().getDay()) + Integer.toString(post.getTime().getHours())
+                + Integer.toString(post.getTime().getMinutes())+ Integer.toString(post.getTime().getSeconds());
+        double scorekey = (double) Long.parseLong(score);
+
+        zSetOperationsPost.remove(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), scorekey);
+    }
 
 
     @Override
