@@ -6,7 +6,7 @@ import java.util.Set;
 /**
  * Created by Marina on 29.11.2016.
  */
-public class Userx implements Serializable{
+public class UserX implements Serializable{
 
     private String id;
     private String name;
@@ -17,7 +17,10 @@ public class Userx implements Serializable{
     private String image;
     private String session;
 
-    public Userx(String name, String password){
+    public UserX(){
+
+    }
+    public UserX(String name, String password){
         this.name = name;
         this.password = password;
     }

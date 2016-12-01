@@ -1,7 +1,7 @@
 package de.hska.lkit.demo.web.data.repo;
 
 import de.hska.lkit.demo.web.data.model.Post;
-import de.hska.lkit.demo.web.data.model.Userx;
+import de.hska.lkit.demo.web.data.model.UserX;
 
 import java.util.Set;
 
@@ -13,10 +13,10 @@ import java.util.Set;
 public interface DataRepository {
 
     /**
-     * Adds user to db.
-     * @param user user to add
+     * Adds userX to db.
+     * @param userX userX to add
      */
-    void registerUser(Userx user);
+    void registerUser(UserX userX);
 
     /**
      * Checks if username has already been taken.
@@ -51,7 +51,7 @@ public interface DataRepository {
      * @param id id of user
      * @return certain user
      */
-    Userx getUserById(String id);
+    UserX getUserById(String id);
 
     /**
      * Returns a set of user ids followers of a certain user.
@@ -83,12 +83,18 @@ public interface DataRepository {
 
     /**
      * Returns a sorted set of all global post ids.
+     *
+     * limit
+     * offset
      * @return set of all global posts
      */
     Set<String> getAllGlobalPosts();
 
     /**
      * Return a set of all timeline post ids of a certain user.
+     *
+     * limit: anzahl posts
+     * offset: wo anfangen.
      * @param id id of user
      * @return set of posts
      */

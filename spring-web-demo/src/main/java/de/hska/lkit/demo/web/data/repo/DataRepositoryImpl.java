@@ -2,7 +2,7 @@ package de.hska.lkit.demo.web.data.repo;
 
 import de.hska.lkit.demo.web.data.model.Post;
 
-import de.hska.lkit.demo.web.data.model.Userx;
+import de.hska.lkit.demo.web.data.model.UserX;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.support.atomic.RedisAtomicLong;
@@ -76,37 +76,37 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Override
-    public void registerUser(Userx user) {
+    public void registerUser(UserX userX) {
 
         String id = String.valueOf(userId.incrementAndGet());
 
-        user.setId(id);
+        userX.setId(id);
 
-        String key = Constants.USER_KEY_PREFIX + user.getId();
-        stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, user.getId());
-        stringHashOperations.put(key, Constants.KEY_SUFFIX_NAME, user.getName());
-        stringHashOperations.put(key, Constants.KEY_SUFFIX_PASSWORD, user.getPassword());
-        stringHashOperations.put(Constants.USER_KEY_PREFIX + user.getName(), Constants.KEY_SUFFIX_ID, user.getId());
+        String key = Constants.USER_KEY_PREFIX + userX.getId();
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, userX.getId());
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_NAME, userX.getName());
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_PASSWORD, userX.getPassword());
+        stringHashOperations.put(Constants.USER_KEY_PREFIX + userX.getName(), Constants.KEY_SUFFIX_ID, userX.getId());
 
-        setOperations.add(Constants.KEY_GET_ALL_USERS, user.getId());
+        setOperations.add(Constants.KEY_GET_ALL_USERS, userX.getId());
         double scoreKey = 0;
 
-        for( int i = 0; i < user.getName().length(); i++){
+        for(int i = 0; i < userX.getName().length(); i++){
 
             if(i == 0){
-               scoreKey += user.getName().charAt(i)*(256^3);
+               scoreKey += userX.getName().charAt(i)*(256^3);
             }
             if(i == 1){
-                scoreKey += user.getName().charAt(i)*(256^2);
+                scoreKey += userX.getName().charAt(i)*(256^2);
             }
             if(i == 2){
-                scoreKey += user.getName().charAt(i)*(256^1);
+                scoreKey += userX.getName().charAt(i)*(256^1);
             }
             if(i == 3){
-                scoreKey += user.getName().charAt(i);
+                scoreKey += userX.getName().charAt(i);
             }
         }
-        zSetOperationsUser.add(Constants.KEY_GET_ALL_USERS_2, user.getId(),scoreKey);
+        zSetOperationsUser.add(Constants.KEY_GET_ALL_USERS_2, userX.getId(),scoreKey);
     }
 
 
@@ -159,7 +159,7 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Override
-    public Userx getUserById(String id) {
+    public UserX getUserById(String id) {
 
         if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + id)) {
 
@@ -168,12 +168,12 @@ public class DataRepositoryImpl implements DataRepository {
             Set posts = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_POSTS);
             Set follows = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWS);
             Set followedBy = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWED_BY);
-            Userx user = new Userx(name, password);
-            user.setId(id);
-            user.setPosts(posts);
-            user.setFollowed(followedBy);
-            user.setFollows(follows);
-            return user;
+            UserX userX = new UserX(name, password);
+            userX.setId(id);
+            userX.setPosts(posts);
+            userX.setFollowed(followedBy);
+            userX.setFollows(follows);
+            return userX;
         }
         return null;
     }
@@ -259,8 +259,8 @@ public class DataRepositoryImpl implements DataRepository {
 
         for(String follower: followers){
 
-            Userx user = getUserById(follower);
-            Set<String> posts = user.getPosts();
+            UserX userX = getUserById(follower);
+            Set<String> posts = userX.getPosts();
 
 
             followerPostSets.add(posts);
@@ -270,8 +270,8 @@ public class DataRepositoryImpl implements DataRepository {
 
         String key = Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_TIMELINE_POSTS;
       //  zSetOperationsPost.intersectAndStore(followerPostSets.get(0), key);
-        Userx user = getUserById(id);
-        Set<String> posts = user.getPosts();
+        UserX userX = getUserById(id);
+        Set<String> posts = userX.getPosts();
 
         String key2 = Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_POSTS;
 
@@ -292,13 +292,13 @@ public class DataRepositoryImpl implements DataRepository {
         String key = Constants.POST_KEY_PREFIX + post.getId();
         // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
-        stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUser().getId());
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
 
 
 
         ////add post to users post list
-        String userPostsKey = Constants.USER_KEY_PREFIX + post.getUser().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
+        String userPostsKey = Constants.USER_KEY_PREFIX + post.getUserX().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
         setOperations.add(userPostsKey, post.getId());
 
 
@@ -350,7 +350,7 @@ public class DataRepositoryImpl implements DataRepository {
         if (stringRedisTemplate.hasKey(Constants.POST_KEY_PREFIX + id)) {
 
             String userId = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_USER);
-            Userx user = getUserById(userId);
+            UserX userX = getUserById(userId);
             String message = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_MESSAGE);
             String timeString = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_TIME);
             Date time = new Date();
@@ -358,7 +358,7 @@ public class DataRepositoryImpl implements DataRepository {
                 time = new Date();
 
             }
-            Post post = new Post(user, message,time);
+            Post post = new Post(userX, message,time);
             post.setId(id);
             return post;
         }
