@@ -111,6 +111,27 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Override
+    public void loginUser (UserX user) {
+        String key = Constants.USER_KEY_PREFIX + user.getId();
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_SESSION, (new Date()).toString());
+    }
+
+    @Override
+    public boolean isUserLoggedIn (UserX user) {
+        String key = Constants.USER_KEY_PREFIX + user.getId();
+        String dateAsString = stringHashOperations.get(key, Constants.KEY_SUFFIX_SESSION);
+        // TODO: Check if the session is still valid
+        return dateAsString != null;
+    }
+
+    @Override
+    public void logoutUser (UserX user) {
+        String key = Constants.USER_KEY_PREFIX + user.getId();
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_SESSION);
+    }
+
+
+    @Override
     public boolean isPasswordValid(String name, String password) {
 
         if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + name)) {
@@ -290,7 +311,7 @@ public class DataRepositoryImpl implements DataRepository {
         post.setId(id);
 
         String key = Constants.POST_KEY_PREFIX + post.getId();
-       // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
+        // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
@@ -315,6 +336,33 @@ public class DataRepositoryImpl implements DataRepository {
     }
 
 
+    @Override
+    public void deletePost(Post post) {
+
+        String key = Constants.POST_KEY_PREFIX + post.getId();
+        // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
+
+
+
+        ////add post to users post list
+        String userPostsKey = Constants.USER_KEY_PREFIX + post.getUserX().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
+        setOperations.remove(userPostsKey, post.getId());
+
+
+        ////add post to global post list
+
+        //setOperations.add(Constants.KEY_GET_ALL_GLOBAL_POSTS, post.getId());
+
+        String score = Integer.toString(post.getTime().getYear()) + Integer.toString(post.getTime().getMonth())
+                + Integer.toString(post.getTime().getDay()) + Integer.toString(post.getTime().getHours())
+                + Integer.toString(post.getTime().getMinutes())+ Integer.toString(post.getTime().getSeconds());
+        double scorekey = (double) Long.parseLong(score);
+
+        zSetOperationsPost.remove(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), scorekey);
+    }
 
 
     @Override

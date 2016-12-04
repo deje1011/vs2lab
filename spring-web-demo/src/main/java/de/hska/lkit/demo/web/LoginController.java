@@ -19,17 +19,17 @@ public class LoginController {
     public LoginController(DataRepository repository){
         super();
         dataRepository = repository;
-
     }
     @RequestMapping(value = "/loginU", method = RequestMethod.POST)
-        public String loginU(UserX userX) {
-        if(!userX.getName().isEmpty() && !userX.getPassword().isEmpty()){
+    public String loginU(UserX userX) {
 
-            if(dataRepository.isPasswordValid(userX.getName(), userX.getPassword())){
+        if (!userX.getName().isEmpty() && !userX.getPassword().isEmpty()){
 
+            if (dataRepository.isPasswordValid(userX.getName(), userX.getPassword())){
+                this.dataRepository.loginUser(userX);
                 return "timeline";
-            }else{
-                System.out.print("login false");
+            } else {
+                System.out.print("login failed");
             }
         }
 
