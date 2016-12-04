@@ -25,7 +25,7 @@ public class TimelineController {
         this.dataRepository = dataRepository;
 
         // For testing
-        this.dataRepository.loginUser(this.dataRepository.getUserById("1"));
+        // this.dataRepository.loginUser(this.dataRepository.getUserById("1"));
     }
 
 
