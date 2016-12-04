@@ -111,6 +111,27 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Override
+    public void loginUser (UserX user) {
+        String key = Constants.USER_KEY_PREFIX + user.getId();
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_SESSION, (new Date()).toString());
+    }
+
+    @Override
+    public boolean isUserLoggedIn (UserX user) {
+        String key = Constants.USER_KEY_PREFIX + user.getId();
+        String dateAsString = stringHashOperations.get(key, Constants.KEY_SUFFIX_SESSION);
+        // TODO: Check if the session is still valid
+        return dateAsString != null;
+    }
+
+    @Override
+    public void logoutUser (UserX user) {
+        String key = Constants.USER_KEY_PREFIX + user.getId();
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_SESSION);
+    }
+
+
+    @Override
     public boolean isPasswordValid(String name, String password) {
 
         if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + name)) {
@@ -321,13 +342,13 @@ public class DataRepositoryImpl implements DataRepository {
         String key = Constants.POST_KEY_PREFIX + post.getId();
         // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
         stringHashOperations.delete(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
-        stringHashOperations.delete(key, Constants.KEY_SUFFIX_USER, post.getUser().getId());
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
         stringHashOperations.delete(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
 
 
 
         ////add post to users post list
-        String userPostsKey = Constants.USER_KEY_PREFIX + post.getUser().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
+        String userPostsKey = Constants.USER_KEY_PREFIX + post.getUserX().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
         setOperations.remove(userPostsKey, post.getId());
 
 
