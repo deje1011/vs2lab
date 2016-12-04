@@ -1101,7 +1101,6 @@ window.VirtualScroller = (function ($, _) {
             });
             var rowState = renderManager.rowStates[params.rowIndex];
             return !!(
-                config.stickyRows > params.rowIndex ||
                 config.stickyColumns > params.columnIndex ||
                 (rowState && rowState.children[params.columnIndex])
             );
@@ -1394,7 +1393,7 @@ window.VirtualScroller = (function ($, _) {
                     renderManager.render();
                 }
                 // Only render the row if it is inside the viewport
-                else if (!renderManager.state.children[params.rowIndex]) {
+                else if (!_.get(renderManager, 'state.children[' + params.rowIndex + ']')) {
 
                     // If it was added as the last row, we can just call render and it will show up
                     // because it will be appended
@@ -1751,7 +1750,7 @@ window.VirtualScroller = (function ($, _) {
 
         config.scrollContainer.css({
             overflow: 'auto',
-            position: 'relative',
+            position: 'absolute',
             zIndex: 2,
             pointerEvents: 'none',
             maxHeight: '100%',
@@ -1761,7 +1760,7 @@ window.VirtualScroller = (function ($, _) {
         }).attr('virtual-scroller-scroll-container', '');
 
         config.canvasContainer.css({
-            position: 'absolute',
+            position: 'relative',
             top: 0,
             zIndex: 1,
             overflow: 'hidden',
