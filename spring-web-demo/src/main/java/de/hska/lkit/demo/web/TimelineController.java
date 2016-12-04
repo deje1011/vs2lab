@@ -78,12 +78,9 @@ public class TimelineController {
 
     @RequestMapping(value = "/api/posts/{postId}", method = RequestMethod.DELETE)
     public @ResponseBody boolean deleteTimelinePostForUser (@PathVariable String postId) {
-        //this.database.deletePost(postId);
 
-        //Post post = this.dataRepository.getPostById(postId);
-        //System.out.println("DELETE POST " + postId + " -- " + post.getId());
-        //post.setUser(fakeUser);
-        //this.dataRepository.deletePost(post);
+        Post post = this.dataRepository.getPostById(postId);
+        this.dataRepository.deletePost(post);
 
         return true;
     }
