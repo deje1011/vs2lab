@@ -335,9 +335,15 @@ public class DataRepositoryImpl implements DataRepository {
         zSetOperationsPost.add(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), scorekey);
     }
 
+    @Override
+    public void updatePost (Post post) {
+        String key = Constants.POST_KEY_PREFIX + post.getId();
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
+    }
+
 
     @Override
-    public void deletePost(Post post) {
+    public void deletePost (Post post) {
 
         String key = Constants.POST_KEY_PREFIX + post.getId();
         stringHashOperations.delete(key, Constants.KEY_SUFFIX_MESSAGE);

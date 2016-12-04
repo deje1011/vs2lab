@@ -87,7 +87,9 @@ public class TimelineController {
 
     @RequestMapping(value = "/api/posts/{postId}", method = RequestMethod.PUT)
     public @ResponseBody boolean updateTimelinePostForUser (@PathVariable String postId, @RequestBody String content) {
-        //this.database.updatePost(postId, content);
+        Post post = this.dataRepository.getPostById(postId);
+        post.setMessage(content);
+        this.dataRepository.updatePost(post);
         return true;
     }
 

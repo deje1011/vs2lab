@@ -125,6 +125,13 @@ public interface DataRepository {
      */
     void addPost(Post post);
 
+
+    /**
+     * Updates a post (by writing the current message to the database).
+     * @param post post to update.
+     */
+    void updatePost(Post post);
+
     /**
      * Deletes a post.
      * @param post post to delete.
