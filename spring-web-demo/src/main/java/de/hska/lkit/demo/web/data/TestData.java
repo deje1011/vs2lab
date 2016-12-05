@@ -2,7 +2,7 @@ package de.hska.lkit.demo.web.data;
 
 import de.hska.lkit.demo.web.data.model.Post;
 
-import de.hska.lkit.demo.web.data.model.Userx;
+import de.hska.lkit.demo.web.data.model.UserX;
 import de.hska.lkit.demo.web.data.repo.DataRepository;
 
 import java.time.Instant;
@@ -16,7 +16,7 @@ import java.util.Set;
  */
 public class TestData {
 
-    private ArrayList<Userx> mUsers = new ArrayList<>();
+    private ArrayList<UserX> mUserXES = new ArrayList<>();
     private ArrayList<Post> mPosts = new ArrayList<>();
     private DataRepository mRepository;
 
@@ -30,11 +30,11 @@ public class TestData {
 
 
         mRepository.addFollower("115", "128");
-        Userx user = mRepository.getUserById("115");
+        UserX userX = mRepository.getUserById("115");
 
         printAllTimelinePosts("115");
 
-        //testIsPasswordValid(mUsers.get(0),mUsers.get(5));
+        //testIsPasswordValid(mUserXES.get(0),mUserXES.get(5));
         //testIsUserNameUnique("lukas");
 
      /*   addPostsToList();
@@ -68,7 +68,7 @@ public class TestData {
         Set<String> followers = mRepository.getAllFollowers(userId);
 
         for(String follower: followers){
-            System.out.print("\n Der User: " + userId + " folgt: " + follower );
+            System.out.print("\n Der UserX: " + userId + " folgt: " + follower );
         }
     }
 
@@ -77,7 +77,7 @@ public class TestData {
         Set<String> followers = mRepository.getAllFollowed(userId);
 
         for(String follower: followers){
-            System.out.print("\n Dem User: " + userId + " folgt: " + follower );
+            System.out.print("\n Dem UserX: " + userId + " folgt: " + follower );
         }
     }
 
@@ -88,7 +88,7 @@ public class TestData {
         for(String post : posts){
 
             Post p = mRepository.getPostById(post);
-            System.out.print("\n post:" + post + ":user " + p.getUser().getId());
+            System.out.print("\n post:" + post + ":user " + p.getUserX().getId());
             System.out.print("\n post:" + post + ":message " + p.getMessage());
             System.out.print("\n post:" + post + ":time " + p.getTime() + "\n");
 
@@ -109,25 +109,25 @@ public class TestData {
         Set<String> users = mRepository.getAllUsers();
         for(String u : users){
 
-            Userx user = mRepository.getUserById(u);
-            System.out.print("\n user:" + user.getName() + ":id " + u);
-            System.out.print("\n user:" + u +":name " + user.getName());
-            System.out.print("\n user:" + u + ":password " + user.getPassword() + "\n");
-            Set<String> follows = user.getFollows();
+            UserX userX = mRepository.getUserById(u);
+            System.out.print("\n userX:" + userX.getName() + ":id " + u);
+            System.out.print("\n userX:" + u +":name " + userX.getName());
+            System.out.print("\n userX:" + u + ":password " + userX.getPassword() + "\n");
+            Set<String> follows = userX.getFollows();
 
             if(follows != null) {
                 for (String follow : follows) {
-                    Userx p = mRepository.getUserById(follow);
-                    System.out.print("\n user:" + u + ":follows:" + p.getId() + ":" + p.getName());
+                    UserX p = mRepository.getUserById(follow);
+                    System.out.print("\n userX:" + u + ":follows:" + p.getId() + ":" + p.getName());
                 }
             }
 
-            Set<String> followedBy = user.getFollowed();
+            Set<String> followedBy = userX.getFollowed();
 
             if(followedBy != null) {
                 for (String follow : followedBy) {
-                    Userx p = mRepository.getUserById(follow);
-                    System.out.print("\n user:" + u + ":followedBy:" + p.getId() + ":" + p.getName());
+                    UserX p = mRepository.getUserById(follow);
+                    System.out.print("\n userX:" + u + ":followedBy:" + p.getId() + ":" + p.getName());
                 }
             }
 
@@ -136,12 +136,12 @@ public class TestData {
 
 
 
-           /* Set<String> posts = user.getPosts();
+           /* Set<String> posts = userX.getPosts();
 
             if(posts != null) {
                 for (String post : posts) {
                     Post p = mRepository.getPostById(post);
-                    System.out.print("\n user:" + u + ":posts:" + p.getId() + ":" + p.getMessage());
+                    System.out.print("\n userX:" + u + ":posts:" + p.getId() + ":" + p.getMessage());
                 }
             }*/
             System.out.print("\n ");
@@ -150,9 +150,9 @@ public class TestData {
 
     private void registerUsersToDatabase(){
 
-        for(Userx user: mUsers){
-           // if(mRepository.isUserNameUnique(user.getName())) {
-                mRepository.registerUser(user);
+        for(UserX userX : mUserXES){
+           // if(mRepository.isUserNameUnique(userX.getName())) {
+                mRepository.registerUser(userX);
            // }
         }
     }
@@ -182,15 +182,15 @@ public class TestData {
 
     private void addUsersToList(){
 
-        mUsers.add(new Userx("tim", "shdfjkj"));
-        mUsers.add(new Userx("lukas", "serger"));
-        mUsers.add(new Userx("tom", "gjkjh"));
-        mUsers.add(new Userx("hans", "fgjgkhjkhj"));
-        mUsers.add(new Userx("peter", "adfgfd"));
-        mUsers.add(new Userx("lisa", "wererztz"));
-        mUsers.add(new Userx("hanna", "yyxvcfnd"));
-        mUsers.add(new Userx("kim", "djghkhj"));
-        mUsers.add(new Userx("andreas", "dfgutghfg"));
+        mUserXES.add(new UserX("tim", "shdfjkj"));
+        mUserXES.add(new UserX("lukas", "serger"));
+        mUserXES.add(new UserX("tom", "gjkjh"));
+        mUserXES.add(new UserX("hans", "fgjgkhjkhj"));
+        mUserXES.add(new UserX("peter", "adfgfd"));
+        mUserXES.add(new UserX("lisa", "wererztz"));
+        mUserXES.add(new UserX("hanna", "yyxvcfnd"));
+        mUserXES.add(new UserX("kim", "djghkhj"));
+        mUserXES.add(new UserX("andreas", "dfgutghfg"));
 
 
     }

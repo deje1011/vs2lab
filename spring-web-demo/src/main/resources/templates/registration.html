@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>create and save new user</title>
+<title>create and save new userX</title>
 <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -24,21 +24,18 @@
                     </tr>
                 </thead>
             </table>
-		
-		<form class="form" action="#" method="post">
-            <!-- th:action="@{/adduser}" th:object="${user}" -->
+
+        <!-- Wenn du denn submit button drückst führe die funktion registerU aus bzw. die Funktion die mit registerU gemappt ist-->
+		<form class="form" method="post" th:action="@{/registerU}" th:object="${userX}"  >
 			<div class="form-group">
 				<label> Username </label> 
-                <input class="form-control" type="text" /> <!-- th:field="*{username}" -->
+                <input class="form-control" type="text" th:field="*{name}"/>
 			</div>
 			<div class="form-group">
 				<label> Password </label> 
-                <input class="form-control" type="password" /> <!-- th:field="*{password}" -->
+                <input class="form-control" type="password"  th:field="*{password}" />
 			</div>
-			<div class="form-group">
-				<label> Repeat Password </label> 
-                <input type="text" class="form-control" /> <!-- th:field="*{firstname}" -->
-			</div>
+
             <div class="btn-container">
                 <button href="/profile" type="submit" class="btn btn-default">Register</button>
                 <a href="/login">Already registered? Login</a>

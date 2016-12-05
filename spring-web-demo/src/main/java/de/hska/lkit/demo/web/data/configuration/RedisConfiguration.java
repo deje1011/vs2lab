@@ -1,7 +1,7 @@
 package de.hska.lkit.demo.web.data.configuration;
 
 
-import de.hska.lkit.demo.web.data.model.Userx;
+import de.hska.lkit.demo.web.data.model.UserX;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -40,8 +40,8 @@ public class RedisConfiguration {
 
 
     @Bean(name = "redisTemplate")
-    public RedisTemplate<String, Userx> getRedisTemplate() {
-        RedisTemplate<String, Userx> redisTemplate = new RedisTemplate<String, Userx>();
+    public RedisTemplate<String, UserX> getRedisTemplate() {
+        RedisTemplate<String, UserX> redisTemplate = new RedisTemplate<String, UserX>();
         redisTemplate.setConnectionFactory(getConnectionFactory());
         return redisTemplate;
     }
