@@ -335,33 +335,25 @@ public class DataRepositoryImpl implements DataRepository {
         zSetOperationsPost.add(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), scorekey);
     }
 
+    @Override
+    public void updatePost (Post post) {
+        String key = Constants.POST_KEY_PREFIX + post.getId();
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
+    }
+
 
     @Override
-    public void deletePost(Post post) {
+    public void deletePost (Post post) {
 
         String key = Constants.POST_KEY_PREFIX + post.getId();
-        // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
-        stringHashOperations.delete(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
-        stringHashOperations.delete(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
-        stringHashOperations.delete(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_MESSAGE);
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_USER);
+        stringHashOperations.delete(key, Constants.KEY_SUFFIX_TIME);
 
-
-
-        ////add post to users post list
         String userPostsKey = Constants.USER_KEY_PREFIX + post.getUserX().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
         setOperations.remove(userPostsKey, post.getId());
 
-
-        ////add post to global post list
-
-        //setOperations.add(Constants.KEY_GET_ALL_GLOBAL_POSTS, post.getId());
-
-        String score = Integer.toString(post.getTime().getYear()) + Integer.toString(post.getTime().getMonth())
-                + Integer.toString(post.getTime().getDay()) + Integer.toString(post.getTime().getHours())
-                + Integer.toString(post.getTime().getMinutes())+ Integer.toString(post.getTime().getSeconds());
-        double scorekey = (double) Long.parseLong(score);
-
-        zSetOperationsPost.remove(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), scorekey);
+        zSetOperationsPost.remove(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId());
     }
 
 
