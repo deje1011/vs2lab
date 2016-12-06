@@ -1,5 +1,6 @@
 package de.hska.lkit.demo.web;
 
+import de.hska.lkit.demo.web.data.TestData;
 import de.hska.lkit.demo.web.data.model.UserX;
 import de.hska.lkit.demo.web.data.repo.DataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class LoginController {
     @RequestMapping(value = "/loginU", method = RequestMethod.POST)
         public String loginU(UserX userX) {
         if(!userX.getName().isEmpty() && !userX.getPassword().isEmpty()){
-
+            System.out.print(dataRepository.isPasswordValid(userX.getName(), userX.getPassword()));
             if(dataRepository.isPasswordValid(userX.getName(), userX.getPassword())){
 
                 return "timeline";
@@ -38,6 +39,12 @@ public class LoginController {
 
     @RequestMapping(value = "/login")
     public String login(UserX userX) {
+
+
+        TestData test = new TestData();
+
+        test.testDataBaseMethods(dataRepository);
+
         return "login";
     }
 }

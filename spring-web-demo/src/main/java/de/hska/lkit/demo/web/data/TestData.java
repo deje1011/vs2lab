@@ -22,17 +22,17 @@ public class TestData {
 
     public void testDataBaseMethods(DataRepository repository){
         mRepository = repository;
-        addUsersToList();
+      //  addUsersToList();
         //registerUsersToDatabase();
 
+        printAllUsers();
+      //  Set<String> users = mRepository.getAllUsers();
 
-        Set<String> users = mRepository.getAllUsers();
 
+       // mRepository.addFollower("115", "128");
+       // UserX userX = mRepository.getUserById("115");
 
-        mRepository.addFollower("115", "128");
-        UserX userX = mRepository.getUserById("115");
-
-        printAllTimelinePosts("115");
+      //  printAllTimelinePosts("115");
 
         //testIsPasswordValid(mUserXES.get(0),mUserXES.get(5));
         //testIsUserNameUnique("lukas");
