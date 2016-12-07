@@ -31,6 +31,14 @@
                 <li class="active"><a href="/timeline">Timeline</a></li>
                 <li><a href="/profile">Profile</a></li>
                 <li><a href="/login">Logout</a></li>
+                <div id="suchleiste">
+                    <div class="input-group" th:object="${query}">
+                        <input type="text" id="searchUser" class="form-control" placeholder="search..." th:field="*{data}"/>
+                        <span class="input-group-btn">
+                            <button id="searchbtn" class="btn btn-default" type="button">Go</button>
+                        </span>
+                    </div>
+                </div>
             </ul>
         </div>
     </div>
