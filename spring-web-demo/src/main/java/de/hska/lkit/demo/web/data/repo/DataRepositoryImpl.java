@@ -9,6 +9,7 @@ import org.springframework.data.redis.support.atomic.RedisAtomicLong;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -271,12 +272,26 @@ public class DataRepositoryImpl implements DataRepository {
     }
 
     @Override
-    public Set<String> getTimelinePosts(String id) {
+    public ArrayList<Post> getTimelinePosts(String userId) {
 
-        Set<String> timelinePosts;
+        Set<String> followers = getAllFollowers(userId);
+        Set<String> allPosts = this.getAllGlobalPosts();
+        ArrayList<Post> timelinePosts = new ArrayList<>();
+
+        for (String postId : allPosts) {
+            Post post = this.getPostById(postId);
+            String createdBy = post.getUserX().getId();
+            if (followers.contains(createdBy) || userId.equals(createdBy)) {
+                timelinePosts.add(post);
+            }
+        }
+
+        return timelinePosts;
+
+        /*Set<String> timelinePosts;
         ArrayList<Set<String>> followerPostSets = new ArrayList<>();
 
-        Set<String> followers = getAllFollowers(id);
+        Set<String> followers = getAllFollowers(userId);
 
         for(String follower: followers){
 
@@ -289,18 +304,18 @@ public class DataRepositoryImpl implements DataRepository {
 
         Set<String> global = zSetOperationsPost.range(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, (long)0, zSetOperationsPost.size(Constants.KEY_GET_ALL_GLOBAL_POSTS_2));
 
-        String key = Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_TIMELINE_POSTS;
+        String key = Constants.USER_KEY_PREFIX + userId + ":" + Constants.KEY_SUFFIX_TIMELINE_POSTS;
       //  zSetOperationsPost.intersectAndStore(followerPostSets.get(0), key);
-        UserX userX = getUserById(id);
+        UserX userX = getUserById(userId);
         Set<String> posts = userX.getPosts();
 
-        String key2 = Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_POSTS;
+        String key2 = Constants.USER_KEY_PREFIX + userId + ":" + Constants.KEY_SUFFIX_POSTS;
 
         setOperations.unionAndStore(key2,followerPostSets.get(0),key);
 
         Set<String> results = setOperations.members(key);
 
-        return results;
+        return results;*/
     }
 
     @Override
@@ -311,11 +326,9 @@ public class DataRepositoryImpl implements DataRepository {
         post.setId(id);
 
         String key = Constants.POST_KEY_PREFIX + post.getId();
-        // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
-
 
 
         ////add post to users post list

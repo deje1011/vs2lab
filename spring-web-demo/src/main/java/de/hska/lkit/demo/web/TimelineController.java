@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
@@ -45,12 +46,8 @@ public class TimelineController {
     }
 
 
-    @RequestMapping(value = "/api/users/{userId}/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
-    public @ResponseBody Post[] getTimelinePostsForUser (@PathVariable String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
-        UserX user = this.dataRepository.getUserById(userId);
-        if (this.dataRepository.isUserLoggedIn(user) == false) {
-            return new Post[0];
-        }
+    @RequestMapping(value = "api/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
+    public @ResponseBody Post[] getGlobalTimelinePosts (@RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
         Set<String> postIds = this.dataRepository.getAllGlobalPosts();
         String[] postIdsAsArray = postIds.toArray(new String[postIds.size()]);
         Post[] posts = new Post[postIds.size()];
@@ -58,6 +55,16 @@ public class TimelineController {
             posts[i] = this.dataRepository.getPostById(postIdsAsArray[i]);
         }
         return posts;
+    }
+
+
+    @RequestMapping(value = "/api/users/{userId}/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
+    public @ResponseBody ArrayList<Post> getTimelinePostsForUser (@PathVariable String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+        UserX user = this.dataRepository.getUserById(userId);
+        if (this.dataRepository.isUserLoggedIn(user) == false) {
+            return new ArrayList<>();
+        }
+        return this.dataRepository.getTimelinePosts(userId);
     }
 
     /*

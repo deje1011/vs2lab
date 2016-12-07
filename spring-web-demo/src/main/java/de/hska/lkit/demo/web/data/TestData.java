@@ -54,11 +54,9 @@ public class TestData {
 
     private void printAllTimelinePosts(String userid){
 
-        Set<String> posts = mRepository.getTimelinePosts(userid);
+        ArrayList<Post> posts = mRepository.getTimelinePosts(userid);
 
-        for(String post: posts){
-
-            Post p = mRepository.getPostById(post);
+        for(Post p: posts){
             System.out.print("\nPost Conent: " + p.getMessage());
         }
 

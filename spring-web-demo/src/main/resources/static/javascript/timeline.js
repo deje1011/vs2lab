@@ -10,10 +10,8 @@
     var dataAdapter = VirtualScroller.DataAdapter({
         loadRange: function (range) {
             return $.ajax({
-                url: 'api/users/1/timeline/posts?offset=' + range.start + '&limit=' + (range.end - range.start) + 1,
+                url: 'api/timeline/posts?offset=' + range.start + '&limit=' + (range.end - range.start) + 1,
                 method: 'GET'
-            }).then(function (posts) {
-                return posts.reverse();
             });
         }
     });
