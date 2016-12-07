@@ -290,7 +290,17 @@ public class DataRepositoryImpl implements DataRepository {
     }
 
     public List<Post> getTimelinePosts(String userId, long offset, long limit) {
-        return this.getTimelinePosts(userId).subList((int) offset, (int) offset + (int) limit);
+        List posts = this.getTimelinePosts(userId);
+
+        int _offset = (int) offset;
+        _offset =  Math.min(_offset, posts.size() - (int) limit);
+        _offset = Math.max(_offset, 0);
+
+        int _limit = (int) limit;
+        _limit = Math.max(_limit, 0);
+        _limit = Math.min(_limit, posts.size() - _offset);
+
+        return posts.subList(_offset, _offset + _limit - 1);
     }
 
     @Override
