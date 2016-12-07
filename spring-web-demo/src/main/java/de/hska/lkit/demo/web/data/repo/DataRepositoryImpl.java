@@ -264,15 +264,15 @@ public class DataRepositoryImpl implements DataRepository {
 
     @Override
     public Set<String> getAllGlobalPosts() {
+        return this.getAllGlobalPosts((long)0, zSetOperationsPost.size(Constants.KEY_GET_ALL_GLOBAL_POSTS_2));
+    }
 
-        //Set<String> posts = setOperations.members(Constants.KEY_GET_ALL_GLOBAL_POSTS);
-
-        Set<String> posts = zSetOperationsPost.range(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, (long)0, zSetOperationsPost.size(Constants.KEY_GET_ALL_GLOBAL_POSTS_2));
-        return posts;
+    public Set<String> getAllGlobalPosts(long offset, long limit) {
+        return zSetOperationsPost.range(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, offset, limit);
     }
 
     @Override
-    public ArrayList<Post> getTimelinePosts(String userId) {
+    public List<Post> getTimelinePosts(String userId) {
 
         Set<String> followers = getAllFollowers(userId);
         Set<String> allPosts = this.getAllGlobalPosts();
@@ -287,35 +287,10 @@ public class DataRepositoryImpl implements DataRepository {
         }
 
         return timelinePosts;
+    }
 
-        /*Set<String> timelinePosts;
-        ArrayList<Set<String>> followerPostSets = new ArrayList<>();
-
-        Set<String> followers = getAllFollowers(userId);
-
-        for(String follower: followers){
-
-            UserX userX = getUserById(follower);
-            Set<String> posts = userX.getPosts();
-
-
-            followerPostSets.add(posts);
-        }
-
-        Set<String> global = zSetOperationsPost.range(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, (long)0, zSetOperationsPost.size(Constants.KEY_GET_ALL_GLOBAL_POSTS_2));
-
-        String key = Constants.USER_KEY_PREFIX + userId + ":" + Constants.KEY_SUFFIX_TIMELINE_POSTS;
-      //  zSetOperationsPost.intersectAndStore(followerPostSets.get(0), key);
-        UserX userX = getUserById(userId);
-        Set<String> posts = userX.getPosts();
-
-        String key2 = Constants.USER_KEY_PREFIX + userId + ":" + Constants.KEY_SUFFIX_POSTS;
-
-        setOperations.unionAndStore(key2,followerPostSets.get(0),key);
-
-        Set<String> results = setOperations.members(key);
-
-        return results;*/
+    public List<Post> getTimelinePosts(String userId, long offset, long limit) {
+        return this.getTimelinePosts(userId).subList((int) offset, (int) offset + (int) limit);
     }
 
     @Override

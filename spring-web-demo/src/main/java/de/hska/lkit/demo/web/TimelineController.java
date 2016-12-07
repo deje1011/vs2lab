@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -48,7 +49,7 @@ public class TimelineController {
 
     @RequestMapping(value = "api/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
     public @ResponseBody Post[] getGlobalTimelinePosts (@RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
-        Set<String> postIds = this.dataRepository.getAllGlobalPosts();
+        Set<String> postIds = this.dataRepository.getAllGlobalPosts((long) offset, (long) limit);
         String[] postIdsAsArray = postIds.toArray(new String[postIds.size()]);
         Post[] posts = new Post[postIds.size()];
         for (int i = 0; i < postIds.size(); i++) {
@@ -59,12 +60,12 @@ public class TimelineController {
 
 
     @RequestMapping(value = "/api/users/{userId}/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
-    public @ResponseBody ArrayList<Post> getTimelinePostsForUser (@PathVariable String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+    public @ResponseBody List<Post> getTimelinePostsForUser (@PathVariable String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
         UserX user = this.dataRepository.getUserById(userId);
         if (this.dataRepository.isUserLoggedIn(user) == false) {
             return new ArrayList<>();
         }
-        return this.dataRepository.getTimelinePosts(userId);
+        return this.dataRepository.getTimelinePosts(userId, (long) offset, (long) limit);
     }
 
     /*
