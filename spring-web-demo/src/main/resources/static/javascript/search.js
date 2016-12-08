@@ -12,10 +12,16 @@
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
-    if (location.pathname === 'searchFollowed' || location.pathname === 'searchFollowers') {
+    if (location.pathname === '/searchFollowed' || location.pathname === '/searchFollowers') {
         var url = location.href;
         var username = getParameterByName('username', url);
-        $("#searchUser").val(username);
+
+        if (location.pathname === '/searchFollowed') {
+            $("#searchUser").val('followed:' + username);
+        } else {
+            $("#searchUser").val('followers:' + username);
+        }
+
     }
 
 }(jQuery));
