@@ -121,6 +121,8 @@ public class DataRepositoryImpl implements DataRepository {
     public boolean isUserLoggedIn (UserX user) {
         String key = Constants.USER_KEY_PREFIX + user.getId();
         String dateAsString = stringHashOperations.get(key, Constants.KEY_SUFFIX_SESSION);
+
+        System.out.println("Is User logged in? " + key +  " : " + dateAsString);
         // TODO: Check if the session is still valid
         return dateAsString != null;
     }

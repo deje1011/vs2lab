@@ -7,8 +7,7 @@ import de.hska.lkit.demo.web.data.repo.DataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -77,9 +76,34 @@ public class ProfileController {
         return "search";
     }
 
-    @RequestMapping(value = "/profile")
-    public String deliverTimelineTemplate(Query query) {
-
+    @RequestMapping(value = "/profile", method = RequestMethod.GET)
+    public String deliverProfileTemplate(@ModelAttribute UserX userX, Model model) {
+        System.out.println(userX.getName());
+        String userID = this.dataRepository.getUserId("test");
+        System.out.println("User id:" + userID);
+        if(userID == null)
+            return "login";
+        UserX user = this.dataRepository.getUserById(userID);
+        System.out.println("user :" + user.getName());
+        if(user == null)
+            return "login";
+        System.out.println("Is logged in:" + this.dataRepository.isUserLoggedIn(user));
+        if(!this.dataRepository.isUserLoggedIn(user))
+            return "login";
+        model.addAttribute("userX", user);
+        return "profile";
+    }
+    @RequestMapping(value = "/profile", params = {"username"}, method = RequestMethod.GET)
+    public String deliverProfileTemplateByName(@RequestParam(value = "username") String username, @ModelAttribute UserX userX, Model model) {
+        String userID = this.dataRepository.getUserId(username);
+        if(userID == null)
+            return "login";
+        UserX user = this.dataRepository.getUserById(userID);
+        if(user == null)
+            return "login";
+        /*if(!this.dataRepository.isUserLoggedIn(user))
+            return "login";*/
+        model.addAttribute("userX", user);
         return "profile";
     }
 }
