@@ -55,8 +55,8 @@
                 <th colspan="2">
                     <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width="90"/>
                     <p th:text="${userX.name}" />
-                    <button type="button" class="btn ">Follower <span class="badge">10</span></button>
-                    <button type="button" class="btn ">Followed <span class="badge">20</span></button>
+                    <a th:href="'/searchFollowers?username=' + ${profileUser.name}"><button type="button" class="btn" th:text="'Follower: ' + ${followerNumber}"></button></a>
+                    <a th:href="'/searchFollowed?username=' + ${profileUser.name}"><button type="button" class="btn " th:text="'Followed: ' + ${followedNumber}"> </button></a>
                 </th>
             </tr>
             <tr>

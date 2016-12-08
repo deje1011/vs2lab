@@ -26,10 +26,96 @@ public class SearchController {
     public SearchController(DataRepository repository) {
         super();
         dataRepository = repository;
+
+        this.dataRepository.addFollower("1", "2");
+        this.dataRepository.addFollower("2", "1");
     }
 
     public String data;
 
+
+    private List<UserX> search (String searchData) {
+
+        String[] parts = searchData.split(":");
+        boolean isSearchForFollower = false;
+        boolean isSearchForFollowed = false;
+
+        if (parts.length > 1) {
+            if (parts[0].equals("followers")) {
+                isSearchForFollower = true;
+            } else if (parts[0].equals("followed")) {
+                isSearchForFollowed = true;
+            }
+            searchData = parts[1];
+        }
+
+        boolean wildcard = searchData.endsWith("*");
+        if (wildcard) {
+            searchData = searchData.substring(0, searchData.length() - 1);
+        }
+
+        Set<String> userId = this.dataRepository.getAllUsers();
+        List<UserX> allUser = new ArrayList<>();
+        List<UserX> searchResultUser = new ArrayList<>();
+
+
+        Iterator<String> iterator = userId.iterator();
+        while (iterator.hasNext()) {
+            allUser.add(this.dataRepository.getUserById(iterator.next()));
+        }
+
+        if (isSearchForFollowed) {
+            String userIdToGetFollowedOf = this.dataRepository.getUserId(searchData);
+            Set<String> allFollowedIds = this.dataRepository.getAllFollowed(userIdToGetFollowedOf);
+            Iterator<String> iteratorFollowed = allFollowedIds.iterator();
+            while (iteratorFollowed.hasNext()) {
+                searchResultUser.add(this.dataRepository.getUserById(iteratorFollowed.next()));
+            }
+        } else if (isSearchForFollower) {
+            String userIdToGetFollowersOf = this.dataRepository.getUserId(searchData);
+            Set<String> allFollowerIds = this.dataRepository.getAllFollowers(userIdToGetFollowersOf);
+            Iterator<String> iteratorFollows = allFollowerIds.iterator();
+            while (iteratorFollows.hasNext()) {
+                searchResultUser.add(this.dataRepository.getUserById(iteratorFollows.next()));
+            }
+        } else if (wildcard == true) {
+            for (int i = 0; i < allUser.size(); i++) {
+                String username = allUser.get(i).getName().toLowerCase();
+                if (username.startsWith(searchData)) {
+                    searchResultUser.add(allUser.get(i));
+                }
+            }
+        } else {
+            for (int i = 0; i < allUser.size(); i++) {
+                String username = allUser.get(i).getName().toLowerCase();
+                if (username.equals(searchData)) {
+                    searchResultUser.add(allUser.get(i));
+                }
+            }
+        }
+        return searchResultUser;
+    }
+
+    @RequestMapping(value = "/searchU", method = RequestMethod.POST)
+    public String getSearchResult(Model model, Query query) {
+        String searchData = query.getData();//.toLowerCase();
+        model.addAttribute("result", this.search(searchData));
+        return "search";
+    }
+
+    @RequestMapping(value = "/searchFollowed", params = {"username"}, method = RequestMethod.GET)
+    public String getFollowed (Model model, @RequestParam(value = "username") String username, Query query) {
+        String searchData = "followed:" + username;
+        model.addAttribute("result", this.search(searchData));
+        return "search";
+    }
+
+    @RequestMapping(value = "/searchFollowers", params = {"username"}, method = RequestMethod.GET)
+    public String getFollowers (Model model, @RequestParam(value = "username") String username, Query query) {
+        String searchData = "followers:" + username;
+        model.addAttribute("result", this.search(searchData));
+        return "search";
+    }
 
 
     @RequestMapping(value = "/search")

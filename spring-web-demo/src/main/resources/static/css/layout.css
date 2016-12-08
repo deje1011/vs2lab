@@ -120,15 +120,7 @@ th, td {
     padding: 5px;
 }
 
-table tr:nth-child(even) {
-    background-color: #eee;
-}
-table tr:nth-child(odd) {
-   background-color:#fff;
-}
-
-table th {
-    background-color: lightsteelblue;
+a button {
     color: black;
 }
 
