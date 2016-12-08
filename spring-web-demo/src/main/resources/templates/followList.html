@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>create and save new userX</title>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <!-- The above 3 meta tags must come first in the head -->
+    <link th:href="@{/webjars/bootstrap/3.3.4/css/bootstrap.min.css}"
+          rel="stylesheet" media="screen"/>
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    -->
+    <link rel="stylesheet" type="text/css"  href="layout.css"/>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="collapsed navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-7" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="#" class="navbar-brand flexbox"><img class="img-circle" src="images/auge.jpg" width="30"/>Twitter
+                Klon</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-7">
+            <ul class="nav navbar-nav">
+                <li><a href="#">Search</a></li>
+                <li><a href="/timeline">Timeline</a></li>
+                <li class="active"><a th:href="'/profile?userName=' + ${actualUser.name}">Profile</a></li>
+                <li><a href="/login">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div th:if="${active == 'follower'}">
+    <h3>
+        Follower List
+    </h3>
+    <table width="100%">
+        <thead th:each="follower : ${followerList}">
+        <tr>
+            <th colspan="4">
+                <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width="90"/>
+                <a th:text="follower.name" th:href="'/profile?userName=' + ${follower.name}"></a>
+            </th>
+        </tr>
+        <tr>
+        </tr>
+        </thead>
+    </table>
+</div>
+
+<div th:if="${active == 'followed'}">
+    <h3>
+        Followed List
+    </h3>
+    <table width="100%">
+        <thead th:each="follower : ${followedList}">
+        <tr>
+            <th colspan="4">
+                <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width="90"/>
+                <a th:text="follower.name" th:href="'/profile?userName=' + ${followed.name}"></a>
+                <button type="button" class="btn btn-outline-primary btn-md"
+                        th:action="@{/follow/toFollow(name=${followed.name})}"><br/>Follow
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-md"
+                        th:action="@{/follow/toUnfollow(name=${followed.name})}"><br/>Unfollow
+                </button>
+            </th>
+        </tr>
+        <tr>
+        </tr>
+        </thead>
+    </table>
+</div>
+</body>
+</html>
