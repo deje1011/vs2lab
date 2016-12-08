@@ -6,6 +6,7 @@ import de.hska.lkit.demo.web.data.model.UserX;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Interface to specify interactions with database.
@@ -13,6 +14,13 @@ import java.util.Set;
  * Created by Marina on 20.11.2016.
  */
 public interface DataRepository {
+
+
+    boolean auth(String unname, String pass);
+
+    String addAuth(String uname, long timeout, TimeUnit tUnit);
+
+    void deleteAuth(String uname);
 
     /**
      * Adds userX to db.

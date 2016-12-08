@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Implements the DataRepository interface.
@@ -19,6 +20,10 @@ import java.util.*;
  */
 @Repository
 public class DataRepositoryImpl implements DataRepository {
+
+    @Autowired
+    private StringRedisTemplate template;
+
 
     /**
      * to generate unique ids for user
@@ -75,6 +80,33 @@ public class DataRepositoryImpl implements DataRepository {
         zSetOperationsPost = redisTemplateString.opsForZSet();
     }
 
+
+    @Override
+    public boolean auth(String uname, String pass) {
+        String uid = template.opsForValue().get("uname:" + uname + ":uid");
+        BoundHashOperations<String,String,String> userOps = template.boundHashOps("uid:" + uid + ":user");
+
+        return isPasswordValid(uname,pass);
+    }
+
+    @Override
+    public String addAuth(String uname, long timeout, TimeUnit tUnit) {
+        String uid = template.opsForValue().get("uname:" + uname + ":uid");
+        String auth = UUID.randomUUID().toString();
+        template.boundHashOps("uid:" + uid + ":auth").put("auth",auth);
+        template.expire("uid:" + uid + ":auth", timeout, tUnit);
+        template.opsForValue().set("auth:" +auth + ":uid", uid,timeout,tUnit);
+        return auth;
+    }
+
+    @Override
+    public void deleteAuth(String uname) {
+        String uid = template.opsForValue().get("uname:" + uname + ":uid");
+        String authKey = "uid:" +uid+ ":auth";
+        String auth= (String) template.boundHashOps(authKey).get("auth");
+        List<String> keysToDelete = Arrays.asList(authKey, "auth:" + auth + ":uid");
+        template.delete(keysToDelete);
+    }
 
     @Override
     public void registerUser(UserX userX) {
