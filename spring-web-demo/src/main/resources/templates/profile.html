@@ -55,8 +55,11 @@
                 <th colspan="2">
                     <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width="90"/>
                     <p th:text="${userX.name}" />
-                    <a th:href="'/searchFollowers?username=' + ${profileUser.name}"><button type="button" class="btn" th:text="'Follower: ' + ${followerNumber}"></button></a>
-                    <a th:href="'/searchFollowed?username=' + ${profileUser.name}"><button type="button" class="btn " th:text="'Followed: ' + ${followedNumber}"> </button></a>
+                    <a th:href="'/searchFollowers?username=' + ${userX.name}"><button type="button" class="btn" th:text="'Follower: ' + ${followerNumber}"></button></a>
+                    <a th:href="'/searchFollowed?username=' + ${userX.name}"><button type="button" class="btn " th:text="'Followed: ' + ${followedNumber}"> </button></a>
+
+                    <button id="follow-button" th:user-id="${userX.id}" type="button" class="btn" th:if="${showFollowButton}">Follow</button>
+                    <button id="unfollow-button" th:user-id="${userX.id}" type="button" class="btn" th:if="${showUnfollowButton}">Unfollow</button>
                 </th>
             </tr>
             <tr>
@@ -88,7 +91,7 @@
                             <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
                         </div>
                         <div class="media-body timeline-post-body">
-                            <h4 class="media-heading">Hannelore Hotpink</h4>
+                            <h4 class="media-heading timeline-post-username"></h4>
                             <h6 class="media-heading">01.11.2016 18:00 Uhr</h6>
                             <p class="timeline-post-content"></p><br />
                             <a href="#0" class="timeline-post-edit-button">Edit</a>

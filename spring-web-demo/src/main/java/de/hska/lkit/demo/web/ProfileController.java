@@ -42,7 +42,8 @@ public class ProfileController {
             return "login";
 
         model.addAttribute("userX", user);
-        model.addAttribute("profileUser", user);
+        model.addAttribute("showFollowButton", false);
+        model.addAttribute("showUnfollowButton", false);
         model.addAttribute("followerNumber", this.dataRepository.getAllFollowers(userID).size());
         model.addAttribute("followedNumber", this.dataRepository.getAllFollowed(userID).size());
 
@@ -51,14 +52,47 @@ public class ProfileController {
     @RequestMapping(value = "/profile", params = {"username"}, method = RequestMethod.GET)
     public String deliverProfileTemplateByName(@RequestParam(value = "username") String username, @ModelAttribute UserX userX, Model model) {
         String userID = this.dataRepository.getUserId(username);
-        if(userID == null)
+        String currentUserId = "1";
+        UserX currentUser = this.dataRepository.getUserById(currentUserId);
+
+        if(userID == null) {
             return "login";
+        }
+
         UserX user = this.dataRepository.getUserById(userID);
-        if(user == null)
+
+        if (user == null) {
             return "login";
-        /*if(!this.dataRepository.isUserLoggedIn(user))
-            return "login";*/
+        }
+
+        if (!this.dataRepository.isUserLoggedIn(currentUser)) {
+            return "login";
+        }
+
         model.addAttribute("userX", user);
+        model.addAttribute("followerNumber", this.dataRepository.getAllFollowers(userID).size());
+        model.addAttribute("followedNumber", this.dataRepository.getAllFollowed(userID).size());
+
+
+        Set<String> followerIds = this.dataRepository.getAllFollowed(userID);
+
+        model.addAttribute("showFollowButton", !followerIds.contains(currentUserId));
+        model.addAttribute("showUnfollowButton", followerIds.contains(currentUserId));
+
         return "profile";
+    }
+
+    @RequestMapping(value = "api/users/{userId}/follow/{userToFollowId}", method = RequestMethod.POST)
+    public @ResponseBody boolean follow (@PathVariable String userId, @PathVariable String userToFollowId) {
+        this.dataRepository.addFollower(userId, userToFollowId);
+        return true;
+    }
+
+
+    @RequestMapping(value = "api/users/{userId}/unfollow/{userToUnfollowId}", method = RequestMethod.POST)
+    public @ResponseBody boolean unfollow (@PathVariable String userId, @PathVariable String userToUnfollowId) {
+        System.out.println(userId + ':' + userToUnfollowId);
+        this.dataRepository.removeFollower(userId, userToUnfollowId);
+        return true;
     }
 }

@@ -17,12 +17,13 @@
           preRenderRows: 5,
           renderRow: function (params) {
               var $row = $rowPrototype.clone();
-              $row.find('.timeline-post-content').text('Loading...');
+              $row.find('.timeline-post-username').text('Loading...');
               dataAdapter.get({index: params.rowIndex}).then(function (post) {
                   $row.attr('timeline-post-id', post.id);
                   $row.find('.timeline-post-content').text(post.message);
+                  $row.find('.timeline-post-username').text(post.userX.name);
               }).fail(function () {
-                $row.find('.timeline-post-content').text('An Error occurred while loading this post.');
+                $row.find('.timeline-post-username').text('An Error occurred while loading this post.');
               }).always(function () {
                   // faster clean up (garbage collector)
                   $row = null;
