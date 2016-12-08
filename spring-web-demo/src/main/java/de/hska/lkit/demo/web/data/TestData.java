@@ -8,6 +8,7 @@ import de.hska.lkit.demo.web.data.repo.DataRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -54,11 +55,9 @@ public class TestData {
 
     private void printAllTimelinePosts(String userid){
 
-        Set<String> posts = mRepository.getTimelinePosts(userid);
+        List<Post> posts = mRepository.getTimelinePosts(userid);
 
-        for(String post: posts){
-
-            Post p = mRepository.getPostById(post);
+        for(Post p: posts){
             System.out.print("\nPost Conent: " + p.getMessage());
         }
 

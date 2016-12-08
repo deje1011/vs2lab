@@ -49,7 +49,7 @@ html, body{
     font-size: 16px;
 }
 .input-group{
-    margin: 5% 0;
+    margin: 30px 0;
 }
 
 .table tbody tr p{
@@ -90,45 +90,4 @@ html, body{
 .timeline-container {
     height: 100%;
     max-height: 100%;
-}
-
-#userS {
-
-    width: 120px;
-}
-
-#suchleiste {
-    width: 170px;
-    margin-left: 130%
-}
-
-
-
-th, td {
-    padding: 5px;
-}
-
-table tr:nth-child(even) {
-    background-color: #eee;
-}
-table tr:nth-child(odd) {
-   background-color:#fff;
-}
-
-table th {
-    background-color: lightsteelblue;
-    color: black;
-}
-
-.row{
-    margin-left: 50px;
-    margin-top: 10px;
-    font-weight:bold;
-    font-size: medium;
-
-}
-
-.col{
-
-
 }

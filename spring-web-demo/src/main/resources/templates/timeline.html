@@ -8,83 +8,79 @@
     <!-- The above 3 meta tags *must* come first in the head -->
     <link th:href="@{/webjars/bootstrap/3.3.4/css/bootstrap.min.css}"
           rel="stylesheet" media="screen"/>
-    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"/>
-     -->
-      <link rel="stylesheet" type="text/css" href="../css/layout.css"/>
-  </head>
-  <body>
-  <nav class="navbar navbar-default navbar-static-top">
-      <div class="container-fluid">
-          <div class="navbar-header">
-              <button type="button" class="collapsed navbar-toggle" data-toggle="collapse"
-                      data-target="#bs-example-navbar-collapse-7" aria-expanded="false">
-                  <span class="sr-only">Toggle navigation</span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-              </button>
-              <a href="#" class="navbar-brand flexbox"><img class="img-circle" src="images/auge.jpg" width="30"/>Twitter
-                  Klon</a>
-          </div>
-          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-7">
-              <ul class="nav navbar-nav">
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">-->
+    <link rel="stylesheet" type="text/css" href="../css/layout.css"/>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="collapsed navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-7" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="#" class="navbar-brand flexbox"><img class="img-circle" src="images/auge.jpg" width="30"/>Twitter
+                Klon</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-7">
+            <ul class="nav navbar-nav">
+                <li><a href="#">Search</a></li>
+                <li class="active"><a href="/timeline">Timeline</a></li>
+                <li><a href="/profile">Profile</a></li>
+                <li><a href="/login">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container-content timeline-container-content">
+    <h3 class="title">Global Timeline</h3>
 
-                  <li class="active"><a href="/timeline">Timeline</a></li>
-                  <li><a href="/profile">Profile</a></li>
-                  <li><a href="/login">Logout</a></li>
-
-
-
-
-              </ul>
-          </div>
-      </div>
-  </nav>
-  <div class="container-content timeline-container-content">
-      <h3 class="title">Global Timeline</h3>
-
-      <div class="input-group">
-          <input type="text" id="create-post-input" class="form-control" placeholder="Type your message..."/>
-          <span class="input-group-btn">
-              <button id="create-post-button" class="btn btn-default" type="button">Post</button>
-          </span>
-      </div>
+    <div class="input-group">
+        <input type="text" id="create-post-input" class="form-control" placeholder="Type your message..."/>
+        <span class="input-group-btn">
+            <button id="create-post-button" class="btn btn-default" type="button">Post</button>
+        </span>
+    </div>
 
 
-      <div class="timeline-container">
-          <div class="timeline-canvas-container">
-              <div class="timeline-canvas chronic"></div>
-          </div>
+    <div class="timeline-container">
+        <div class="timeline-canvas-container">
+            <div class="timeline-canvas chronic"></div>
+        </div>
 
-          <script type="text/template" class="timeline-template">
-              <div class="timeline-row" style="padding-bottom:20px">
-                  <div class="well" style="margin: 0">
-                      <div class="media">
+        <script type="text/template" class="timeline-template">
+            <div class="timeline-row" style="padding-bottom:20px">
+                <div class="well" style="margin: 0">
+                    <div class="media">
 
-                          <div class="media-left">
-                              <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
-                          </div>
-                          <div class="media-body timeline-post-body">
-                              <h4 class="media-heading">Hannelore Hotpink</h4>
-                              <h6 class="media-heading">01.11.2016 18:00 Uhr</h6>
-                              <p class="timeline-post-content"></p><br />
-                              <a href="#0" class="timeline-post-edit-button">Edit</a>
-                              <a href="#0" class="timeline-post-delete-button">Delete</a>
-                          </div>
+                        <div class="media-left">
+                            <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
+                        </div>
+                        <div class="media-body timeline-post-body">
+                            <h4 class="media-heading">Hannelore Hotpink</h4>
+                            <h6 class="media-heading">01.11.2016 18:00 Uhr</h6>
+                            <p class="timeline-post-content"></p><br />
+                            <a href="#0" class="timeline-post-edit-button">Edit</a>
+                            <a href="#0" class="timeline-post-delete-button">Delete</a>
+                        </div>
 
-                      </div>
-                  </div>
-              </div>
-          </script>
-      </div>
+                    </div>
+                </div>
+            </div>
+        </script>
+    </div>
 
 
-  </div>
+</div>
 
-  <script src="../javascript/lodash.min.js"></script>
-  <script src="../javascript/jquery.min.js"></script>
-  <script src="../javascript/virtual-scroller.js"></script>
-  <script src="../javascript/timeline.js"></script>
+<script src="../javascript/lodash.min.js"></script>
+<script src="../javascript/jquery.min.js"></script>
+<script src="../javascript/virtual-scroller.js"></script>
+<script src="../javascript/timeline-data-adapter.js"></script>
+<script src="../javascript/timeline.js"></script>
 
-  </body>
-  </html>
+</body>
+</html>
