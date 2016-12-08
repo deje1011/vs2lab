@@ -96,6 +96,10 @@ html, body{
     margin: 30px 0;
 }
 
+.timeline-row {
+    margin-right: 1px;
+}
+
 
 /*
     Search

@@ -50,7 +50,7 @@ public class TimelineController {
         String[] postIdsAsArray = postIds.toArray(new String[postIds.size()]);
         Post[] posts = new Post[postIds.size()];
         for (int i = 0; i < postIds.size(); i++) {
-            posts[i] = this.dataRepository.getPostById(postIdsAsArray[postIds.size() - 1 - i]);
+            posts[i] = this.dataRepository.getPostById(postIdsAsArray[i]);
         }
         return posts;
     }
@@ -63,7 +63,6 @@ public class TimelineController {
             return new ArrayList<>();
         }
         List<Post> posts = this.dataRepository.getTimelinePosts(userId, (long) offset, (long) limit);
-        Collections.reverse(posts);
         return posts;
     }
 
@@ -75,6 +74,7 @@ public class TimelineController {
     public @ResponseBody boolean createTimelinePostForUser (@PathVariable String userId, @RequestBody String content) {
         UserX user = this.dataRepository.getUserById(userId);
         if (this.dataRepository.isUserLoggedIn(user) == false) {
+            System.out.println("Post Error: User is not logged in");
             return false;
         }
         this.dataRepository.addPost(new Post(user, content, new Date()));

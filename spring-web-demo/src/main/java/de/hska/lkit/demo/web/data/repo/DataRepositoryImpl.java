@@ -121,8 +121,6 @@ public class DataRepositoryImpl implements DataRepository {
     public boolean isUserLoggedIn (UserX user) {
         String key = Constants.USER_KEY_PREFIX + user.getId();
         String dateAsString = stringHashOperations.get(key, Constants.KEY_SUFFIX_SESSION);
-
-        System.out.println("Is User logged in? " + key +  " : " + dateAsString);
         // TODO: Check if the session is still valid
         return dateAsString != null;
     }
@@ -270,7 +268,7 @@ public class DataRepositoryImpl implements DataRepository {
     }
 
     public Set<String> getAllGlobalPosts(long offset, long limit) {
-        return zSetOperationsPost.range(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, offset, limit);
+        return zSetOperationsPost.reverseRange(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, offset, limit);
     }
 
     @Override
@@ -317,22 +315,12 @@ public class DataRepositoryImpl implements DataRepository {
         stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
 
-
         ////add post to users post list
         String userPostsKey = Constants.USER_KEY_PREFIX + post.getUserX().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
         setOperations.add(userPostsKey, post.getId());
 
-
-        ////add post to global post list
-
-        //setOperations.add(Constants.KEY_GET_ALL_GLOBAL_POSTS, post.getId());
-
-        String score = Integer.toString(post.getTime().getYear()) + Integer.toString(post.getTime().getMonth())
-                + Integer.toString(post.getTime().getDay()) + Integer.toString(post.getTime().getHours())
-                + Integer.toString(post.getTime().getMinutes())+ Integer.toString(post.getTime().getSeconds());
-        double scorekey = (double) Long.parseLong(score);
-
-        zSetOperationsPost.add(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), scorekey);
+        Long score = post.getTime().getTime();
+        zSetOperationsPost.add(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), score);
     }
 
     @Override

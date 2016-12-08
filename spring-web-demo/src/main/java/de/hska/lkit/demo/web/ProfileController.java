@@ -78,16 +78,12 @@ public class ProfileController {
 
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     public String deliverProfileTemplate(@ModelAttribute UserX userX, Model model) {
-        System.out.println(userX.getName());
         String userID = this.dataRepository.getUserId("test");
-        System.out.println("User id:" + userID);
         if(userID == null)
             return "login";
         UserX user = this.dataRepository.getUserById(userID);
-        System.out.println("user :" + user.getName());
         if(user == null)
             return "login";
-        System.out.println("Is logged in:" + this.dataRepository.isUserLoggedIn(user));
         if(!this.dataRepository.isUserLoggedIn(user))
             return "login";
         model.addAttribute("userX", user);
