@@ -53,19 +53,25 @@ public class ProfileController {
         //  }
 
         if (wildcard == true) {
-            String searchData = query.getData().substring(0, query.getData().length()-1); //vom 1. bis zum vorletzen zeichen slice funktion von 0,length-1
+            String searchData = query.getData()
+                .substring(0, query.getData().length()-1) //vom 1. bis zum vorletzen zeichen slice funktion von 0,length-1
+                .toLowerCase();
             for (int i = 0; i < allUser.size(); i++) {
-                if (allUser.get(i).getName().startsWith(searchData)) {
+                String username = allUser.get(i).getName().toLowerCase();
+                if (username.startsWith(searchData)) {
                     searchResultUser.add(allUser.get(i));
                 }
             }
         } else {
+            String searchData = query.getData().toLowerCase();
             for (int i = 0; i < allUser.size(); i++) {
-                if (allUser.get(i).getName().equals(query.getData())) {
+                String username = allUser.get(i).getName().toLowerCase();
+                if (username.equals(searchData)) {
                     searchResultUser.add(allUser.get(i));
                 }
             }
         }
+
         model.addAttribute("result", searchResultUser);
 
         return "search";
