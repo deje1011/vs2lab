@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>create and save new userX</title>
+    <title th:text="${userX.name}+'\'s profile'"/>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -27,12 +27,12 @@
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-7">
             <ul class="nav navbar-nav">
-                <!--<li><a href="#">Search</a></li>-->
+                <li><a href="/search">Search</a></li>
                 <li><a href="/timeline">Timeline</a></li>
                 <li class="active"><a href="/profile">Profile</a></li>
                 <li><a href="/login">Logout</a></li>
 
-                <form class="form" th:action="@{searchU}" method="post" th:object="${query}"  >
+                <!--<form class="form" th:action="@{searchU}" method="post" th:object="${query}"  >
                     <div id="suchleiste">
                         <div class="input-group">
                             <input type="text" id="searchUser" class="form-control" placeholder="search..." th:field="*{data}"/>
@@ -41,7 +41,7 @@
                         </span>
                         </div>
                     </div>
-                </form>
+                </form>-->
             </ul>
         </div>
     </div>
@@ -54,7 +54,7 @@
             <tr>
                 <th colspan="2">
                     <img class="pull-left abstand-rechts img-circle" src="images/profilbild.png" width="90"/>
-                    <p>Hannelore Hotpink</p>
+                    <p th:text="${userX.name}" />
                     <button type="button" class="btn ">Follower <span class="badge">10</span></button>
                     <button type="button" class="btn ">Followed <span class="badge">20</span></button>
                 </th>

@@ -30,21 +30,9 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-7">
             <ul class="nav navbar-nav">
                 <li class="active"><a href="/search">Search</a></li>
-                <li><a href="/timeline">Profile</a></li>
+                <li><a href="/timeline">Timeline</a></li>
                 <li><a href="/profile">Profile</a></li>
                 <li><a href="/login">Logout</a></li>
-
-                <form class="form" th:action="@{searchU}" method="post" th:object="${query}"  >
-                    <div id="suchleiste">
-                        <div class="input-group">
-
-                            <input type="text" id="searchUser" class="form-control" placeholder="search..." th:field="*{data}"/>
-                            <span class="input-group-btn">
-                            <button id="searchbtn" class="btn btn-default" type="submit">Go</button>
-                        </span>
-                        </div>
-                    </div>
-                </form>
 
             </ul>
         </div>
@@ -52,9 +40,22 @@
 </nav>
 
 
-    <div class="row" th:each="user: ${result}">
-        <div class="col" th:text="${user.name}" th:href="'/profile?userName=' + ${user.name}" >
+    <form class="form" th:action="@{searchU}" method="post" th:object="${query}"  >
+        <div id="suchleiste">
+            <div class="input-group">
+
+                <input type="text" id="searchUser" class="form-control" placeholder="search..." th:field="*{data}"/>
+                <span class="input-group-btn">
+                                <button id="searchbtn" class="btn btn-default" type="submit">Go</button>
+                            </span>
+            </div>
         </div>
+    </form>
+
+
+    <div class="row" th:each="user: ${result}">
+        <a class="col" th:text="${user.name}" th:href="'/profile?username=' + ${user.name}" >
+        </a>
     </div>
 
 

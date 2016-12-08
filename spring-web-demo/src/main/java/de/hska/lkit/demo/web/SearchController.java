@@ -3,6 +3,7 @@ package de.hska.lkit.demo.web;
 import de.hska.lkit.demo.web.data.model.UserX;
 import de.hska.lkit.demo.web.data.repo.DataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -17,6 +18,7 @@ import java.util.Set;
 /**
  * Created by whatseb on 23.11.16.
  */
+@Controller
 public class SearchController {
     private final DataRepository dataRepository;
 
