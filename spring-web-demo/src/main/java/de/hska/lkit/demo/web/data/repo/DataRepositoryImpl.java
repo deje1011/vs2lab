@@ -9,6 +9,7 @@ import org.springframework.data.redis.support.atomic.RedisAtomicLong;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -263,44 +264,43 @@ public class DataRepositoryImpl implements DataRepository {
 
     @Override
     public Set<String> getAllGlobalPosts() {
+        return this.getAllGlobalPosts((long)0, zSetOperationsPost.size(Constants.KEY_GET_ALL_GLOBAL_POSTS_2));
+    }
 
-        //Set<String> posts = setOperations.members(Constants.KEY_GET_ALL_GLOBAL_POSTS);
-
-        Set<String> posts = zSetOperationsPost.range(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, (long)0, zSetOperationsPost.size(Constants.KEY_GET_ALL_GLOBAL_POSTS_2));
-        return posts;
+    public Set<String> getAllGlobalPosts(long offset, long limit) {
+        return zSetOperationsPost.range(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, offset, limit);
     }
 
     @Override
-    public Set<String> getTimelinePosts(String id) {
+    public List<Post> getTimelinePosts(String userId) {
 
-        Set<String> timelinePosts;
-        ArrayList<Set<String>> followerPostSets = new ArrayList<>();
+        Set<String> followers = getAllFollowers(userId);
+        Set<String> allPosts = this.getAllGlobalPosts();
+        ArrayList<Post> timelinePosts = new ArrayList<>();
 
-        Set<String> followers = getAllFollowers(id);
-
-        for(String follower: followers){
-
-            UserX userX = getUserById(follower);
-            Set<String> posts = userX.getPosts();
-
-
-            followerPostSets.add(posts);
+        for (String postId : allPosts) {
+            Post post = this.getPostById(postId);
+            String createdBy = post.getUserX().getId();
+            if (followers.contains(createdBy) || userId.equals(createdBy)) {
+                timelinePosts.add(post);
+            }
         }
 
-        Set<String> global = zSetOperationsPost.range(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, (long)0, zSetOperationsPost.size(Constants.KEY_GET_ALL_GLOBAL_POSTS_2));
+        return timelinePosts;
+    }
 
-        String key = Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_TIMELINE_POSTS;
-      //  zSetOperationsPost.intersectAndStore(followerPostSets.get(0), key);
-        UserX userX = getUserById(id);
-        Set<String> posts = userX.getPosts();
+    public List<Post> getTimelinePosts(String userId, long offset, long limit) {
+        List posts = this.getTimelinePosts(userId);
 
-        String key2 = Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_POSTS;
+        int _offset = (int) offset;
+        _offset =  Math.min(_offset, posts.size() - (int) limit);
+        _offset = Math.max(_offset, 0);
 
-        setOperations.unionAndStore(key2,followerPostSets.get(0),key);
+        int _limit = (int) limit;
+        _limit = Math.max(_limit, 0);
+        _limit = Math.min(_limit, posts.size() - _offset);
 
-        Set<String> results = setOperations.members(key);
-
-        return results;
+        return posts.subList(_offset, _offset + _limit - 1);
     }
 
     @Override
@@ -311,11 +311,9 @@ public class DataRepositoryImpl implements DataRepository {
         post.setId(id);
 
         String key = Constants.POST_KEY_PREFIX + post.getId();
-        // stringHashOperations.put(key, Constants.KEY_SUFFIX_ID, post.getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
-
 
 
         ////add post to users post list

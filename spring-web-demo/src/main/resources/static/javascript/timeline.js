@@ -1,4 +1,4 @@
-(function ($) {
+(function ($, dataAdapter) {
 
     'use strict';
 
@@ -6,17 +6,6 @@
     var $canvasContainer = $container.find('.timeline-canvas-container');
     var $canvas = $container.find('.timeline-canvas');
     var $rowPrototype = $($container.find('.timeline-template').html());
-
-    var dataAdapter = VirtualScroller.DataAdapter({
-        loadRange: function (range) {
-            return $.ajax({
-                url: 'api/users/1/timeline/posts?offset=' + range.start + '&limit=' + (range.end - range.start) + 1,
-                method: 'GET'
-            }).then(function (posts) {
-                return posts.reverse();
-            });
-        }
-    });
 
     var virtualScroller = VirtualScroller({
           container: $container,
@@ -30,7 +19,6 @@
               var $row = $rowPrototype.clone();
               $row.find('.timeline-post-content').text('Loading...');
               dataAdapter.get({index: params.rowIndex}).then(function (post) {
-                  console.log('loaded', post);
                   $row.attr('timeline-post-id', post.id);
                   $row.find('.timeline-post-content').text(post.message);
               }).fail(function () {
@@ -87,7 +75,7 @@
         $createPostInput.val('');
         return $.ajax({
             contentType: 'application/json',
-            url: 'api/users/1/timeline/posts',
+            url: 'api/users/1/timeline/posts', // TODO: Use actual user id
             method: 'POST',
             data: content
         }).then(function () {
@@ -180,4 +168,4 @@
 
     });
 
-}(jQuery));
+}(jQuery, dataAdapter));
