@@ -3,6 +3,8 @@ package de.hska.lkit.demo.web.data.repo;
 import de.hska.lkit.demo.web.data.model.Post;
 import de.hska.lkit.demo.web.data.model.UserX;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -108,6 +110,7 @@ public interface DataRepository {
      * @return set of all global posts
      */
     Set<String> getAllGlobalPosts();
+    Set<String> getAllGlobalPosts(long offset, long limit);
 
     /**
      * Return a set of all timeline post ids of a certain user.
@@ -117,7 +120,8 @@ public interface DataRepository {
      * @param id id of user
      * @return set of posts
      */
-    Set<String> getTimelinePosts(String id);
+    List<Post> getTimelinePosts(String id);
+    List<Post> getTimelinePosts(String id, long offset, long limit);
 
     /**
      * Adds a post.

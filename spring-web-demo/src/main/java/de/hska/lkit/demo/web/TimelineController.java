@@ -7,8 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by jessedesaever on 24.10.16.
@@ -45,18 +44,26 @@ public class TimelineController {
     }
 
 
-    @RequestMapping(value = "/api/users/{userId}/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
-    public @ResponseBody Post[] getTimelinePostsForUser (@PathVariable String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
-        UserX user = this.dataRepository.getUserById(userId);
-        if (this.dataRepository.isUserLoggedIn(user) == false) {
-            return new Post[0];
-        }
-        Set<String> postIds = this.dataRepository.getAllGlobalPosts();
+    @RequestMapping(value = "api/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
+    public @ResponseBody Post[] getGlobalTimelinePosts (@RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+        Set<String> postIds = this.dataRepository.getAllGlobalPosts((long) offset, (long) limit);
         String[] postIdsAsArray = postIds.toArray(new String[postIds.size()]);
         Post[] posts = new Post[postIds.size()];
         for (int i = 0; i < postIds.size(); i++) {
-            posts[i] = this.dataRepository.getPostById(postIdsAsArray[i]);
+            posts[i] = this.dataRepository.getPostById(postIdsAsArray[postIds.size() - 1 - i]);
         }
+        return posts;
+    }
+
+
+    @RequestMapping(value = "/api/users/{userId}/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
+    public @ResponseBody List<Post> getTimelinePostsForUser (@PathVariable String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+        UserX user = this.dataRepository.getUserById(userId);
+        if (this.dataRepository.isUserLoggedIn(user) == false) {
+            return new ArrayList<>();
+        }
+        List<Post> posts = this.dataRepository.getTimelinePosts(userId, (long) offset, (long) limit);
+        Collections.reverse(posts);
         return posts;
     }
 
