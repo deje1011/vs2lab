@@ -29,52 +29,6 @@ public class ProfileController {
         this.dataRepository = dataRepository;
     }
 
-    @RequestMapping(value = "/searchU", method = RequestMethod.POST)
-    public String getSearchResult(Model model, Query query) {
-
-        // int queryLength = query.getData().length()-1;
-        // String stringstar = Integer.toString(queryLength);
-        boolean wildcard = query.getData().endsWith("*");
-
-
-        Set<String> userId = this.dataRepository.getAllUsers();
-        List<UserX> allUser = new ArrayList<>();
-        List<UserX> searchResultUser = new ArrayList<>();
-
-
-        Iterator<String> iterator = userId.iterator();
-        while (iterator.hasNext()) {
-            allUser.add(this.dataRepository.getUserById(iterator.next()));
-        }
-
-        //  for (int i = 0; i < userId.size(); i++) {
-        //      allUser.add(this.dataRepository.getUserById(userId.get(i)));
-        //  }
-
-        if (wildcard == true) {
-            String searchData = query.getData()
-                    .substring(0, query.getData().length()-1) //vom 1. bis zum vorletzen zeichen slice funktion von 0,length-1
-                    .toLowerCase();
-            for (int i = 0; i < allUser.size(); i++) {
-                String username = allUser.get(i).getName().toLowerCase();
-                if (username.startsWith(searchData)) {
-                    searchResultUser.add(allUser.get(i));
-                }
-            }
-        } else {
-            String searchData = query.getData().toLowerCase();
-            for (int i = 0; i < allUser.size(); i++) {
-                String username = allUser.get(i).getName().toLowerCase();
-                if (username.equals(searchData)) {
-                    searchResultUser.add(allUser.get(i));
-                }
-            }
-        }
-
-        model.addAttribute("result", searchResultUser);
-
-        return "search";
-    }
 
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     public String deliverProfileTemplate(@ModelAttribute UserX userX, Model model) {
@@ -86,7 +40,12 @@ public class ProfileController {
             return "login";
         if(!this.dataRepository.isUserLoggedIn(user))
             return "login";
+
         model.addAttribute("userX", user);
+        model.addAttribute("profileUser", user);
+        model.addAttribute("followerNumber", this.dataRepository.getAllFollowers(userID).size());
+        model.addAttribute("followedNumber", this.dataRepository.getAllFollowed(userID).size());
+
         return "profile";
     }
     @RequestMapping(value = "/profile", params = {"username"}, method = RequestMethod.GET)
