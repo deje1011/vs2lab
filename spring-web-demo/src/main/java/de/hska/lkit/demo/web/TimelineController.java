@@ -22,22 +22,23 @@ public class TimelineController {
     public TimelineController (DataRepository dataRepository) {
         super();
         this.dataRepository = dataRepository;
-
-        // For testing
-        // this.dataRepository.loginUser(this.dataRepository.getUserById("1"));
     }
 
 
     @RequestMapping(value = "/timeline")
-    public String deliverTimelineTemplate() {
+    public String deliverTimelineTemplate (@CookieValue("TWITTER_CLONE_SESSION") String userId, UserX whyTheFuckDoWeNeedThis) {
+        UserX user = this.dataRepository.getUserById(userId);
+        if (user == null) {
+            return "login";
+        }
         return "timeline";
     }
 
 
-    @RequestMapping(value = "/api/users/{userId}/timeline/posts/count", method = RequestMethod.GET)
-    public @ResponseBody int countTimelinePostsForUser (@PathVariable String userId) {
+    @RequestMapping(value = "/api/timeline/posts/count", method = RequestMethod.GET)
+    public @ResponseBody int countGlobalTimelinePosts (@CookieValue("TWITTER_CLONE_SESSION") String userId) {
         UserX user = this.dataRepository.getUserById(userId);
-        if (this.dataRepository.isUserLoggedIn(user) == false) {
+        if (user == null) {
             return 0;
         }
         return this.dataRepository.getAllGlobalPosts().size();
@@ -45,7 +46,11 @@ public class TimelineController {
 
 
     @RequestMapping(value = "api/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
-    public @ResponseBody Post[] getGlobalTimelinePosts (@RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+    public @ResponseBody Post[] getGlobalTimelinePosts (@CookieValue("TWITTER_CLONE_SESSION") String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+        UserX user = this.dataRepository.getUserById(userId);
+        if (user == null) {
+            return new Post[0];
+        }
         Set<String> postIds = this.dataRepository.getAllGlobalPosts((long) offset, (long) limit);
         String[] postIdsAsArray = postIds.toArray(new String[postIds.size()]);
         Post[] posts = new Post[postIds.size()];
@@ -56,24 +61,33 @@ public class TimelineController {
     }
 
 
-    @RequestMapping(value = "/api/users/{userId}/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
-    public @ResponseBody List<Post> getTimelinePostsForUser (@PathVariable String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+    @RequestMapping(value = "/api/current-user/timeline/posts/count", method = RequestMethod.GET)
+    public @ResponseBody int countTimelinePostsForUser (@CookieValue("TWITTER_CLONE_SESSION") String userId) {
         UserX user = this.dataRepository.getUserById(userId);
-        if (this.dataRepository.isUserLoggedIn(user) == false) {
+        if (user == null) {
+            return 0;
+        }
+        return this.dataRepository.getTimelinePosts(userId).size();
+    }
+
+
+    @RequestMapping(value = "/api/current-user/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
+    public @ResponseBody List<Post> getTimelinePostsForUser (@CookieValue("TWITTER_CLONE_SESSION") String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+        UserX user = this.dataRepository.getUserById(userId);
+        if (user == null) {
             return new ArrayList<>();
         }
-        List<Post> posts = this.dataRepository.getTimelinePosts(userId, (long) offset, (long) limit);
-        return posts;
+        return this.dataRepository.getTimelinePosts(userId, (long) offset, (long) limit);
     }
 
     /*
     * Returns a boolean to indicate success for now as I don't know how to pass errors to the client.
     * Accepts a string containing the content of the new post as the request body.
     * */
-    @RequestMapping(value = "/api/users/{userId}/timeline/posts", method = RequestMethod.POST)
-    public @ResponseBody boolean createTimelinePostForUser (@PathVariable String userId, @RequestBody String content) {
+    @RequestMapping(value = "/api/current-user/timeline/posts", method = RequestMethod.POST)
+    public @ResponseBody boolean createTimelinePostForUser (@CookieValue("TWITTER_CLONE_SESSION") String userId, @RequestBody String content) {
         UserX user = this.dataRepository.getUserById(userId);
-        if (this.dataRepository.isUserLoggedIn(user) == false) {
+        if (user == null) {
             System.out.println("Post Error: User is not logged in");
             return false;
         }
@@ -86,6 +100,8 @@ public class TimelineController {
     @RequestMapping(value = "/api/posts/{postId}", method = RequestMethod.DELETE)
     public @ResponseBody boolean deleteTimelinePostForUser (@PathVariable String postId) {
 
+        // TODO: Authorization
+
         Post post = this.dataRepository.getPostById(postId);
         this.dataRepository.deletePost(post);
 
@@ -94,6 +110,9 @@ public class TimelineController {
 
     @RequestMapping(value = "/api/posts/{postId}", method = RequestMethod.PUT)
     public @ResponseBody boolean updateTimelinePostForUser (@PathVariable String postId, @RequestBody String content) {
+
+        // TODO: Authorization
+
         Post post = this.dataRepository.getPostById(postId);
         post.setMessage(content);
         this.dataRepository.updatePost(post);

@@ -5,6 +5,7 @@ import de.hska.lkit.demo.web.data.repo.DataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import de.hska.lkit.demo.web.data.model.Query;
@@ -49,11 +50,6 @@ public class SearchController {
             searchData = parts[1];
         }
 
-        boolean wildcard = searchData.endsWith("*");
-        if (wildcard) {
-            searchData = searchData.substring(0, searchData.length() - 1);
-        }
-
         Set<String> userId = this.dataRepository.getAllUsers();
         List<UserX> allUser = new ArrayList<>();
         List<UserX> searchResultUser = new ArrayList<>();
@@ -78,17 +74,10 @@ public class SearchController {
             while (iteratorFollows.hasNext()) {
                 searchResultUser.add(this.dataRepository.getUserById(iteratorFollows.next()));
             }
-        } else if (wildcard == true) {
-            for (int i = 0; i < allUser.size(); i++) {
-                String username = allUser.get(i).getName().toLowerCase();
-                if (username.startsWith(searchData)) {
-                    searchResultUser.add(allUser.get(i));
-                }
-            }
         } else {
             for (int i = 0; i < allUser.size(); i++) {
                 String username = allUser.get(i).getName().toLowerCase();
-                if (username.equals(searchData)) {
+                if (username.startsWith(searchData)) {
                     searchResultUser.add(allUser.get(i));
                 }
             }
@@ -119,5 +108,11 @@ public class SearchController {
 
 
     @RequestMapping(value = "/search")
-    public String search(Model model, Query query){ return "search";}
+    public String search(Model model, Query query, @CookieValue("TWITTER_CLONE_SESSION") String userId, UserX aintNobodyGotTimeForThat){
+        UserX user = this.dataRepository.getUserById(userId);
+        if (user == null) {
+            return "login";
+        }
+        return "search";
+    }
 }

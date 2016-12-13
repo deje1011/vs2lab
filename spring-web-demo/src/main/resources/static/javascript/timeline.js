@@ -23,7 +23,7 @@
                   $row.find('.timeline-post-content').text(post.message);
                   $row.find('.timeline-post-username').text(post.userX.name);
               }).fail(function () {
-                $row.find('.timeline-post-username').text('An Error occurred while loading this post.');
+                $row.find('.timeline-post-username').text('An error occurred while loading this post.');
               }).always(function () {
                   // faster clean up (garbage collector)
                   $row = null;
@@ -31,13 +31,6 @@
               return $row;
           }
     });
-
-    var countPosts = function () {
-        return $.ajax({
-            url: 'api/users/1/timeline/posts/count',
-            method: 'GET'
-        });
-    };
 
     var rerender = function () {
         dataAdapter.reset();
@@ -76,7 +69,7 @@
         $createPostInput.val('');
         return $.ajax({
             contentType: 'application/json',
-            url: 'api/users/1/timeline/posts', // TODO: Use actual user id
+            url: 'api/current-user/timeline/posts',
             method: 'POST',
             data: content
         }).then(function () {

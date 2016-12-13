@@ -30,7 +30,7 @@
                 <li><a href="/search">Search</a></li>
                 <li><a href="/timeline">Timeline</a></li>
                 <li class="active"><a href="/profile">Profile</a></li>
-                <li><a href="/login">Logout</a></li>
+                <li><a href="/logout">Logout</a></li>
 
                 <!--<form class="form" th:action="@{searchU}" method="post" th:object="${query}"  >
                     <div id="suchleiste">
@@ -47,7 +47,11 @@
     </div>
 </nav>
 <div class="container-content timeline-container-content">
+
+    <div id="profile-user-id" style="display:none" th:text="${userX.id}"></div>
+
     <h3 class="title">Profile</h3>
+
     <div class="userX">
         <table width="100%">
             <thead>
