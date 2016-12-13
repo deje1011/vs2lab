@@ -112,27 +112,6 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Override
-    public void loginUser (UserX user) {
-        String key = Constants.USER_KEY_PREFIX + user.getId();
-        stringHashOperations.put(key, Constants.KEY_SUFFIX_SESSION, (new Date()).toString());
-    }
-
-    @Override
-    public boolean isUserLoggedIn (UserX user) {
-        String key = Constants.USER_KEY_PREFIX + user.getId();
-        String dateAsString = stringHashOperations.get(key, Constants.KEY_SUFFIX_SESSION);
-        // TODO: Check if the session is still valid
-        return dateAsString != null;
-    }
-
-    @Override
-    public void logoutUser (UserX user) {
-        String key = Constants.USER_KEY_PREFIX + user.getId();
-        stringHashOperations.delete(key, Constants.KEY_SUFFIX_SESSION);
-    }
-
-
-    @Override
     public boolean isPasswordValid(String name, String password) {
 
         if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + name)) {
@@ -183,21 +162,25 @@ public class DataRepositoryImpl implements DataRepository {
     @Override
     public UserX getUserById(String id) {
 
-        if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + id)) {
-
-            String name = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_NAME);
-            String password = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_PASSWORD);
-            Set posts = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_POSTS);
-            Set follows = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWS);
-            Set followedBy = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWED_BY);
-            UserX userX = new UserX(name, password);
-            userX.setId(id);
-            userX.setPosts(posts);
-            userX.setFollowed(followedBy);
-            userX.setFollows(follows);
-            return userX;
+        if (id == null) {
+            return null;
         }
-        return null;
+
+        if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + id) == false) {
+            return null;
+        }
+
+        String name = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_NAME);
+        String password = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_PASSWORD);
+        Set posts = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_POSTS);
+        Set follows = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWS);
+        Set followedBy = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWED_BY);
+        UserX userX = new UserX(name, password);
+        userX.setId(id);
+        userX.setPosts(posts);
+        userX.setFollowed(followedBy);
+        userX.setFollows(follows);
+        return userX;
     }
 
 
@@ -300,7 +283,7 @@ public class DataRepositoryImpl implements DataRepository {
         _limit = Math.max(_limit, 0);
         _limit = Math.min(_limit, posts.size() - _offset);
 
-        return posts.subList(_offset, _offset + _limit - 1);
+        return posts.subList(_offset, _offset + _limit);
     }
 
     @Override

@@ -7,4 +7,11 @@
             });
         }
     });
+
+    window.countPosts = function () {
+        return $.ajax({
+            url: 'api/timeline/posts/count',
+            method: 'GET'
+        });
+    };
 }(jQuery));
