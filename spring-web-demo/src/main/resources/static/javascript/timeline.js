@@ -18,10 +18,11 @@
           renderRow: function (params) {
               var $row = $rowPrototype.clone();
               $row.find('.timeline-post-username').text('Loading...');
-              dataAdapter.get({index: params.rowIndex}).then(function (post) {
+              window.dataAdapter.get({index: params.rowIndex}).then(function (post) {
                   $row.attr('timeline-post-id', post.id);
                   $row.find('.timeline-post-content').text(post.message);
                   $row.find('.timeline-post-username').text(post.userX.name);
+                  $row.find('.timeline-post-time').text(moment(post.time).format('DD.MM.YYYY HH:mm'));
               }).fail(function () {
                 $row.find('.timeline-post-username').text('An error occurred while loading this post.');
               }).always(function () {
@@ -34,14 +35,14 @@
 
     var rerender = function () {
         dataAdapter.reset();
-        return countPosts().then(function (rowCount) {
+        return window.countPosts().then(function (rowCount) {
             virtualScroller.rerender({newRowCount: rowCount});
         });
     };
 
     var rerenderViewport = function () {
         dataAdapter.reset();
-        return countPosts().then(function (rowCount) {
+        return window.countPosts().then(function (rowCount) {
             virtualScroller.rerenderViewport({newRowCount: rowCount});
         });
     };

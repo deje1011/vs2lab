@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Array;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -54,6 +56,8 @@ public class DataRepositoryImpl implements DataRepository {
     private ZSetOperations<String, String> zSetOperationsPost;
 
     private HashOperations<String, Object, Object> redisHashOperations;
+
+    private DateFormat dateFormat = new SimpleDateFormat("DD.MM.YYYY HH:mm", Locale.ENGLISH);
 
 
     @Autowired
@@ -296,7 +300,7 @@ public class DataRepositoryImpl implements DataRepository {
         String key = Constants.POST_KEY_PREFIX + post.getId();
         stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
-        stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, this.dateFormat.format(post.getTime()));
 
         ////add post to users post list
         String userPostsKey = Constants.USER_KEY_PREFIX + post.getUserX().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
@@ -338,11 +342,15 @@ public class DataRepositoryImpl implements DataRepository {
             String message = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_MESSAGE);
             String timeString = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_TIME);
             Date time = new Date();
-            if(timeString!=null) {
-                time = new Date();
-
+            if (timeString != null) {
+                try {
+                    time = this.dateFormat.parse(timeString);
+                } catch (Exception error) {
+                    System.out.println("Error parsing date");
+                    System.out.println(error);
+                };
             }
-            Post post = new Post(userX, message,time);
+            Post post = new Post(userX, message, time);
             post.setId(id);
             return post;
         }
