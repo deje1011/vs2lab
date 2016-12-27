@@ -291,7 +291,7 @@ public class DataRepositoryImpl implements DataRepository {
     }
 
     @Override
-    public void addPost(Post post) {
+    public String addPost(Post post) {
 
         String id = String.valueOf(postId.incrementAndGet());
 
@@ -308,6 +308,8 @@ public class DataRepositoryImpl implements DataRepository {
 
         Long score = post.getTime().getTime();
         zSetOperationsPost.add(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), score);
+
+        return id;
     }
 
     @Override

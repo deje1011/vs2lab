@@ -63,7 +63,6 @@
     var $createPostButton = $('#create-post-button');
     var createPost = function () {
         var content = $createPostInput.val();
-        console.log('content:', content);
         if (!content) {
             return;
         }
@@ -161,6 +160,40 @@
             });
 
 
+    });
+
+
+    /*
+        Respond to websockets
+    */
+
+    $.ajax({
+        url: 'api/current-user',
+        method: 'GET'
+    }).then(function (currentUser) {
+        var stompClient = Stomp.over(new SockJS('/websockets'));
+        stompClient.connect({}, function (frame) {
+            stompClient.subscribe('/timeline/users/' + currentUser.id, function (messageOutput) {
+
+                var body = JSON.parse(messageOutput.body);
+                var post = body.post;
+                var action = body.action;
+
+                if (action === 'create') {
+                    if (post.userX.id !== currentUser.id) {
+                        $('.timeline-new-posts-info').show();
+                    }
+                }
+
+            });
+        });
+    }).fail(function () {
+        alert('Could not establish web socket connection');
+    });
+
+    $(document).on('click', '.timeline-new-posts-info', function () {
+        $(this).fadeOut();
+        rerender();
     });
 
 }(jQuery, dataAdapter));

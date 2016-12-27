@@ -18,7 +18,6 @@ public class Post implements Serializable{
         this.message = message;
         this.userX = userX;
         this.time = time;
-
     }
     public String getId() {
         return id;
