@@ -108,8 +108,9 @@ public interface DataRepository {
     /**
      * Adds a post.
      * @param post post to add.
+     * @returns String generated post id
      */
-    void addPost(Post post);
+    String addPost(Post post);
 
 
     /**

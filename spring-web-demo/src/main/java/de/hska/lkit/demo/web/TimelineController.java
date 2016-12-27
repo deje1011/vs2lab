@@ -2,8 +2,10 @@ package de.hska.lkit.demo.web;
 
 import de.hska.lkit.demo.web.data.model.Post;
 import de.hska.lkit.demo.web.data.model.UserX;
+import de.hska.lkit.demo.web.data.model.WebsocketMessage;
 import de.hska.lkit.demo.web.data.repo.DataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,11 +19,18 @@ public class TimelineController {
 
 
     private DataRepository dataRepository;
+    private SimpMessagingTemplate websockets;
 
     @Autowired
-    public TimelineController (DataRepository dataRepository) {
+    public TimelineController (DataRepository dataRepository, SimpMessagingTemplate template) {
         super();
         this.dataRepository = dataRepository;
+        this.websockets = template;
+    }
+
+    @RequestMapping(value = "/api/current-user", method = RequestMethod.GET)
+    public @ResponseBody UserX getCurrentUser (@CookieValue("TWITTER_CLONE_SESSION") String userId) {
+        return this.dataRepository.getUserById(userId);
     }
 
 
@@ -85,14 +94,28 @@ public class TimelineController {
     * Accepts a string containing the content of the new post as the request body.
     * */
     @RequestMapping(value = "/api/current-user/timeline/posts", method = RequestMethod.POST)
-    public @ResponseBody boolean createTimelinePostForUser (@CookieValue("TWITTER_CLONE_SESSION") String userId, @RequestBody String content) {
+    public @ResponseBody Post createTimelinePostForUser (@CookieValue("TWITTER_CLONE_SESSION") String userId, @RequestBody String content) {
         UserX user = this.dataRepository.getUserById(userId);
         if (user == null) {
             System.out.println("Post Error: User is not logged in");
-            return false;
+            return null;
         }
-        this.dataRepository.addPost(new Post(user, content, new Date()));
-        return true;
+        Post post = new Post(user, content, new Date());
+        String id = this.dataRepository.addPost(post);
+        post.setId(id);
+
+        /*
+        * Send out websockets
+        * */
+        WebsocketMessage message = new WebsocketMessage("create", post);
+        // to all followers
+        for (String followerId : user.getFollowed()) {
+            this.websockets.convertAndSend("/timeline/users/" + followerId, message);
+        }
+        // to the user himself (to sync multiple tabs)
+        this.websockets.convertAndSend("/timeline/users/" + userId, message);
+
+        return post;
     }
 
 

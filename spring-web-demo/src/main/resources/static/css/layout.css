@@ -15,7 +15,7 @@ html, body{
     align-items: center;
 }
 .container-content{
-    padding: 3% 7%;
+    margin: 3% 7%;
 }
 
 .login {
@@ -98,6 +98,19 @@ html, body{
 
 .timeline-row {
     margin-right: 1px;
+}
+
+.timeline-new-posts-info {
+   padding: 5px 20px;
+   background: #0101a9;
+   border-radius: 50%;
+   position: absolute;
+   z-index: 2;
+   color: white;
+   right: 0;
+   font-size: 24px;
+   cursor: pointer;
+   display: none;
 }
 
 

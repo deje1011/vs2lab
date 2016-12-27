@@ -42,7 +42,7 @@ public class LoginController {
     }
 
     @RequestMapping(value = "/login")
-    public String login() {
+    public String login(UserX suddenlyWeNeedTheUserHereAsWell) {
         return "login";
     }
 
