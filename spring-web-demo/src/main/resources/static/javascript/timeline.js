@@ -17,12 +17,14 @@
           preRenderRows: 5,
           renderRow: function (params) {
               var $row = $rowPrototype.clone();
-              $row.find('.timeline-post-content').text('Loading...');
-              dataAdapter.get({index: params.rowIndex}).then(function (post) {
+              $row.find('.timeline-post-username').text('Loading...');
+              window.dataAdapter.get({index: params.rowIndex}).then(function (post) {
                   $row.attr('timeline-post-id', post.id);
                   $row.find('.timeline-post-content').text(post.message);
+                  $row.find('.timeline-post-username').text(post.userX.name);
+                  $row.find('.timeline-post-time').text(moment(post.time).format('DD.MM.YYYY HH:mm'));
               }).fail(function () {
-                $row.find('.timeline-post-content').text('An Error occurred while loading this post.');
+                $row.find('.timeline-post-username').text('An error occurred while loading this post.');
               }).always(function () {
                   // faster clean up (garbage collector)
                   $row = null;
@@ -31,23 +33,16 @@
           }
     });
 
-    var countPosts = function () {
-        return $.ajax({
-            url: 'api/users/1/timeline/posts/count',
-            method: 'GET'
-        });
-    };
-
     var rerender = function () {
         dataAdapter.reset();
-        return countPosts().then(function (rowCount) {
+        return window.countPosts().then(function (rowCount) {
             virtualScroller.rerender({newRowCount: rowCount});
         });
     };
 
     var rerenderViewport = function () {
         dataAdapter.reset();
-        return countPosts().then(function (rowCount) {
+        return window.countPosts().then(function (rowCount) {
             virtualScroller.rerenderViewport({newRowCount: rowCount});
         });
     };
@@ -68,14 +63,13 @@
     var $createPostButton = $('#create-post-button');
     var createPost = function () {
         var content = $createPostInput.val();
-        console.log('content:', content);
         if (!content) {
             return;
         }
         $createPostInput.val('');
         return $.ajax({
             contentType: 'application/json',
-            url: 'api/users/1/timeline/posts', // TODO: Use actual user id
+            url: 'api/current-user/timeline/posts',
             method: 'POST',
             data: content
         }).then(function () {
@@ -166,6 +160,40 @@
             });
 
 
+    });
+
+
+    /*
+        Respond to websockets
+    */
+
+    $.ajax({
+        url: 'api/current-user',
+        method: 'GET'
+    }).then(function (currentUser) {
+        var stompClient = Stomp.over(new SockJS('/websockets'));
+        stompClient.connect({}, function (frame) {
+            stompClient.subscribe('/timeline/users/' + currentUser.id, function (messageOutput) {
+
+                var body = JSON.parse(messageOutput.body);
+                var post = body.post;
+                var action = body.action;
+
+                if (action === 'create') {
+                    if (post.userX.id !== currentUser.id) {
+                        $('.timeline-new-posts-info').show();
+                    }
+                }
+
+            });
+        });
+    }).fail(function () {
+        alert('Could not establish web socket connection');
+    });
+
+    $(document).on('click', '.timeline-new-posts-info', function () {
+        $(this).fadeOut();
+        rerender();
     });
 
 }(jQuery, dataAdapter));

@@ -29,81 +29,46 @@ public class ProfileController {
         this.dataRepository = dataRepository;
     }
 
-    @RequestMapping(value = "/searchU", method = RequestMethod.POST)
-    public String getSearchResult(Model model, Query query) {
+    private String getProfile (String userId, Model model) {
+        UserX user = this.dataRepository.getUserById(userId);
 
-        // int queryLength = query.getData().length()-1;
-        // String stringstar = Integer.toString(queryLength);
-        boolean wildcard = query.getData().endsWith("*");
-
-
-        Set<String> userId = this.dataRepository.getAllUsers();
-        List<UserX> allUser = new ArrayList<>();
-        List<UserX> searchResultUser = new ArrayList<>();
-
-
-        Iterator<String> iterator = userId.iterator();
-        while (iterator.hasNext()) {
-            allUser.add(this.dataRepository.getUserById(iterator.next()));
+        if (user == null) {
+            return "login";
         }
 
-        //  for (int i = 0; i < userId.size(); i++) {
-        //      allUser.add(this.dataRepository.getUserById(userId.get(i)));
-        //  }
+        model.addAttribute("userX", user);
+        model.addAttribute("followerNumber", this.dataRepository.getAllFollowers(userId).size());
+        model.addAttribute("followedNumber", this.dataRepository.getAllFollowed(userId).size());
 
-        if (wildcard == true) {
-            String searchData = query.getData()
-                    .substring(0, query.getData().length()-1) //vom 1. bis zum vorletzen zeichen slice funktion von 0,length-1
-                    .toLowerCase();
-            for (int i = 0; i < allUser.size(); i++) {
-                String username = allUser.get(i).getName().toLowerCase();
-                if (username.startsWith(searchData)) {
-                    searchResultUser.add(allUser.get(i));
-                }
-            }
-        } else {
-            String searchData = query.getData().toLowerCase();
-            for (int i = 0; i < allUser.size(); i++) {
-                String username = allUser.get(i).getName().toLowerCase();
-                if (username.equals(searchData)) {
-                    searchResultUser.add(allUser.get(i));
-                }
-            }
-        }
-
-        model.addAttribute("result", searchResultUser);
-
-        return "search";
+        return "profile";
     }
+
 
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
-    public String deliverProfileTemplate(@ModelAttribute UserX userX, Model model) {
-        System.out.println(userX.getName());
-        String userID = this.dataRepository.getUserId("test");
-        System.out.println("User id:" + userID);
-        if(userID == null)
-            return "login";
-        UserX user = this.dataRepository.getUserById(userID);
-        System.out.println("user :" + user.getName());
-        if(user == null)
-            return "login";
-        System.out.println("Is logged in:" + this.dataRepository.isUserLoggedIn(user));
-        if(!this.dataRepository.isUserLoggedIn(user))
-            return "login";
-        model.addAttribute("userX", user);
-        return "profile";
+    public String deliverProfileTemplate(@CookieValue("TWITTER_CLONE_SESSION") String userId, @ModelAttribute UserX userX, Model model) {
+        return this.getProfile(userId, model);
     }
     @RequestMapping(value = "/profile", params = {"username"}, method = RequestMethod.GET)
-    public String deliverProfileTemplateByName(@RequestParam(value = "username") String username, @ModelAttribute UserX userX, Model model) {
-        String userID = this.dataRepository.getUserId(username);
-        if(userID == null)
-            return "login";
-        UserX user = this.dataRepository.getUserById(userID);
-        if(user == null)
-            return "login";
-        /*if(!this.dataRepository.isUserLoggedIn(user))
-            return "login";*/
-        model.addAttribute("userX", user);
-        return "profile";
+    public String deliverProfileTemplateByName(@CookieValue("TWITTER_CLONE_SESSION") String currentUserId, @RequestParam(value = "username") String username, @ModelAttribute UserX userX, Model model) {
+        String userId = this.dataRepository.getUserId(username);
+        Set<String> followerIds = this.dataRepository.getAllFollowed(userId);
+
+        model.addAttribute("showFollowButton", !followerIds.contains(currentUserId));
+        model.addAttribute("showUnfollowButton", followerIds.contains(currentUserId));
+        return this.getProfile(userId, model);
+    }
+
+    @RequestMapping(value = "api/current-user/follow/{userToFollowId}", method = RequestMethod.POST)
+    public @ResponseBody boolean follow (@CookieValue("TWITTER_CLONE_SESSION") String userId, @PathVariable String userToFollowId) {
+        this.dataRepository.addFollower(userId, userToFollowId);
+        return true;
+    }
+
+
+    @RequestMapping(value = "api/current-user/unfollow/{userToUnfollowId}", method = RequestMethod.POST)
+    public @ResponseBody boolean unfollow (@CookieValue("TWITTER_CLONE_SESSION") String userId, @PathVariable String userToUnfollowId) {
+        System.out.println(userId + ':' + userToUnfollowId);
+        this.dataRepository.removeFollower(userId, userToUnfollowId);
+        return true;
     }
 }

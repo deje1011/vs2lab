@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Array;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -59,6 +61,8 @@ public class DataRepositoryImpl implements DataRepository {
     private ZSetOperations<String, String> zSetOperationsPost;
 
     private HashOperations<String, Object, Object> redisHashOperations;
+
+    private DateFormat dateFormat = new SimpleDateFormat("DD.MM.YYYY HH:mm", Locale.ENGLISH);
 
 
     @Autowired
@@ -144,29 +148,6 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Override
-    public void loginUser (UserX user) {
-        String key = Constants.USER_KEY_PREFIX + user.getId();
-        stringHashOperations.put(key, Constants.KEY_SUFFIX_SESSION, (new Date()).toString());
-    }
-
-    @Override
-    public boolean isUserLoggedIn (UserX user) {
-        String key = Constants.USER_KEY_PREFIX + user.getId();
-        String dateAsString = stringHashOperations.get(key, Constants.KEY_SUFFIX_SESSION);
-
-        System.out.println("Is User logged in? " + key +  " : " + dateAsString);
-        // TODO: Check if the session is still valid
-        return dateAsString != null;
-    }
-
-    @Override
-    public void logoutUser (UserX user) {
-        String key = Constants.USER_KEY_PREFIX + user.getId();
-        stringHashOperations.delete(key, Constants.KEY_SUFFIX_SESSION);
-    }
-
-
-    @Override
     public boolean isPasswordValid(String name, String password) {
 
         if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + name)) {
@@ -217,21 +198,25 @@ public class DataRepositoryImpl implements DataRepository {
     @Override
     public UserX getUserById(String id) {
 
-        if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + id)) {
-
-            String name = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_NAME);
-            String password = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_PASSWORD);
-            Set posts = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_POSTS);
-            Set follows = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWS);
-            Set followedBy = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWED_BY);
-            UserX userX = new UserX(name, password);
-            userX.setId(id);
-            userX.setPosts(posts);
-            userX.setFollowed(followedBy);
-            userX.setFollows(follows);
-            return userX;
+        if (id == null) {
+            return null;
         }
-        return null;
+
+        if (stringRedisTemplate.hasKey(Constants.USER_KEY_PREFIX + id) == false) {
+            return null;
+        }
+
+        String name = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_NAME);
+        String password = stringHashOperations.get(Constants.USER_KEY_PREFIX + id, Constants.KEY_SUFFIX_PASSWORD);
+        Set posts = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_POSTS);
+        Set follows = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWS);
+        Set followedBy = setOperations.members(Constants.USER_KEY_PREFIX + id + ":" + Constants.KEY_SUFFIX_FOLLOWED_BY);
+        UserX userX = new UserX(name, password);
+        userX.setId(id);
+        userX.setPosts(posts);
+        userX.setFollowed(followedBy);
+        userX.setFollows(follows);
+        return userX;
     }
 
 
@@ -302,7 +287,7 @@ public class DataRepositoryImpl implements DataRepository {
     }
 
     public Set<String> getAllGlobalPosts(long offset, long limit) {
-        return zSetOperationsPost.range(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, offset, limit);
+        return zSetOperationsPost.reverseRange(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, offset, limit);
     }
 
     @Override
@@ -334,11 +319,11 @@ public class DataRepositoryImpl implements DataRepository {
         _limit = Math.max(_limit, 0);
         _limit = Math.min(_limit, posts.size() - _offset);
 
-        return posts.subList(_offset, _offset + _limit - 1);
+        return posts.subList(_offset, _offset + _limit);
     }
 
     @Override
-    public void addPost(Post post) {
+    public String addPost(Post post) {
 
         String id = String.valueOf(postId.incrementAndGet());
 
@@ -347,24 +332,16 @@ public class DataRepositoryImpl implements DataRepository {
         String key = Constants.POST_KEY_PREFIX + post.getId();
         stringHashOperations.put(key, Constants.KEY_SUFFIX_MESSAGE, post.getMessage());
         stringHashOperations.put(key, Constants.KEY_SUFFIX_USER, post.getUserX().getId());
-        stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, post.getTime().toString());
-
+        stringHashOperations.put(key, Constants.KEY_SUFFIX_TIME, this.dateFormat.format(post.getTime()));
 
         ////add post to users post list
         String userPostsKey = Constants.USER_KEY_PREFIX + post.getUserX().getId() + ":" + Constants.KEY_SUFFIX_POSTS;
         setOperations.add(userPostsKey, post.getId());
 
+        Long score = post.getTime().getTime();
+        zSetOperationsPost.add(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), score);
 
-        ////add post to global post list
-
-        //setOperations.add(Constants.KEY_GET_ALL_GLOBAL_POSTS, post.getId());
-
-        String score = Integer.toString(post.getTime().getYear()) + Integer.toString(post.getTime().getMonth())
-                + Integer.toString(post.getTime().getDay()) + Integer.toString(post.getTime().getHours())
-                + Integer.toString(post.getTime().getMinutes())+ Integer.toString(post.getTime().getSeconds());
-        double scorekey = (double) Long.parseLong(score);
-
-        zSetOperationsPost.add(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), scorekey);
+        return id;
     }
 
     @Override
@@ -399,11 +376,15 @@ public class DataRepositoryImpl implements DataRepository {
             String message = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_MESSAGE);
             String timeString = stringHashOperations.get(Constants.POST_KEY_PREFIX + id, Constants.KEY_SUFFIX_TIME);
             Date time = new Date();
-            if(timeString!=null) {
-                time = new Date();
-
+            if (timeString != null) {
+                try {
+                    time = this.dateFormat.parse(timeString);
+                } catch (Exception error) {
+                    System.out.println("Error parsing date");
+                    System.out.println(error);
+                };
             }
-            Post post = new Post(userX, message,time);
+            Post post = new Post(userX, message, time);
             post.setId(id);
             return post;
         }

@@ -15,7 +15,7 @@ html, body{
     align-items: center;
 }
 .container-content{
-    padding: 3% 7%;
+    margin: 3% 7%;
 }
 
 .login {
@@ -96,6 +96,23 @@ html, body{
     margin: 30px 0;
 }
 
+.timeline-row {
+    margin-right: 1px;
+}
+
+.timeline-new-posts-info {
+   padding: 5px 20px;
+   background: #0101a9;
+   border-radius: 50%;
+   position: absolute;
+   z-index: 2;
+   color: white;
+   right: 0;
+   font-size: 24px;
+   cursor: pointer;
+   display: none;
+}
+
 
 /*
     Search
@@ -116,15 +133,7 @@ th, td {
     padding: 5px;
 }
 
-table tr:nth-child(even) {
-    background-color: #eee;
-}
-table tr:nth-child(odd) {
-   background-color:#fff;
-}
-
-table th {
-    background-color: lightsteelblue;
+a button {
     color: black;
 }
 

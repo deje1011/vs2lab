@@ -28,24 +28,6 @@ public interface DataRepository {
      */
     void registerUser(UserX userX);
 
-    /**
-     * Loggs in userX by writing the current date as the session start to the db.
-     * @param userX userX to login
-     */
-    void loginUser(UserX userX);
-
-    /**
-     * Loggs out userX by removing the session from the db.
-     * @param userX userX to logout
-     */
-    void logoutUser(UserX userX);
-
-    /**
-     * Checks wether or not a user is currently logged in (and if the session is still valid).
-     * @param userX userX to check
-     */
-    boolean isUserLoggedIn(UserX userX);
-
 
     /**
      * Checks if username has already been taken.
@@ -134,8 +116,9 @@ public interface DataRepository {
     /**
      * Adds a post.
      * @param post post to add.
+     * @returns String generated post id
      */
-    void addPost(Post post);
+    String addPost(Post post);
 
 
     /**

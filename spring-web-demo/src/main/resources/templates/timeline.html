@@ -30,13 +30,16 @@
                 <li><a href="/search">Search</a></li>
                 <li class="active"><a href="/timeline">Timeline</a></li>
                 <li><a href="/profile">Profile</a></li>
-                <li><a href="/login">Logout</a></li>
+                <li><a href="/logout">Logout</a></li>
             </ul>
         </div>
     </div>
 </nav>
 <div class="container-content timeline-container-content">
+
     <h3 class="title">Global Timeline</h3>
+
+    <div class="timeline-new-posts-info" title="There are new posts in your timeline!">!</div>
 
     <div class="input-group">
         <input type="text" id="create-post-input" class="form-control" placeholder="Type your message..."/>
@@ -45,8 +48,8 @@
         </span>
     </div>
 
-
     <div class="timeline-container">
+
         <div class="timeline-canvas-container">
             <div class="timeline-canvas chronic"></div>
         </div>
@@ -60,8 +63,8 @@
                             <img class="pull-left abstand-rechts img-circle" src="../images/profilbild.png" width="40"/>
                         </div>
                         <div class="media-body timeline-post-body">
-                            <h4 class="media-heading">Hannelore Hotpink</h4>
-                            <h6 class="media-heading">01.11.2016 18:00 Uhr</h6>
+                            <h4 class="media-heading timeline-post-username"></h4>
+                            <h6 class="media-heading timeline-post-time"></h6>
                             <p class="timeline-post-content"></p><br />
                             <a href="#0" class="timeline-post-edit-button">Edit</a>
                             <a href="#0" class="timeline-post-delete-button">Delete</a>
@@ -76,8 +79,11 @@
 
 </div>
 
+<script src="../javascript/sockjs.min.js"></script>
+<script src="../javascript/stomp.min.js"></script>
 <script src="../javascript/lodash.min.js"></script>
 <script src="../javascript/jquery.min.js"></script>
+<script src="../javascript/moment.min.js"></script>
 <script src="../javascript/virtual-scroller.js"></script>
 <script src="../javascript/timeline-data-adapter.js"></script>
 <script src="../javascript/timeline.js"></script>

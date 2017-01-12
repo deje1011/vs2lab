@@ -2,8 +2,10 @@ package de.hska.lkit.demo.web;
 
 import de.hska.lkit.demo.web.data.model.Post;
 import de.hska.lkit.demo.web.data.model.UserX;
+import de.hska.lkit.demo.web.data.model.WebsocketMessage;
 import de.hska.lkit.demo.web.data.repo.DataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,27 +19,35 @@ public class TimelineController {
 
 
     private DataRepository dataRepository;
+    private SimpMessagingTemplate websockets;
 
     @Autowired
-    public TimelineController (DataRepository dataRepository) {
+    public TimelineController (DataRepository dataRepository, SimpMessagingTemplate template) {
         super();
         this.dataRepository = dataRepository;
+        this.websockets = template;
+    }
 
-        // For testing
-        // this.dataRepository.loginUser(this.dataRepository.getUserById("1"));
+    @RequestMapping(value = "/api/current-user", method = RequestMethod.GET)
+    public @ResponseBody UserX getCurrentUser (@CookieValue("TWITTER_CLONE_SESSION") String userId) {
+        return this.dataRepository.getUserById(userId);
     }
 
 
     @RequestMapping(value = "/timeline")
-    public String deliverTimelineTemplate() {
+    public String deliverTimelineTemplate (@CookieValue("TWITTER_CLONE_SESSION") String userId, UserX whyTheFuckDoWeNeedThis) {
+        UserX user = this.dataRepository.getUserById(userId);
+        if (user == null) {
+            return "login";
+        }
         return "timeline";
     }
 
 
-    @RequestMapping(value = "/api/users/{userId}/timeline/posts/count", method = RequestMethod.GET)
-    public @ResponseBody int countTimelinePostsForUser (@PathVariable String userId) {
+    @RequestMapping(value = "/api/timeline/posts/count", method = RequestMethod.GET)
+    public @ResponseBody int countGlobalTimelinePosts (@CookieValue("TWITTER_CLONE_SESSION") String userId) {
         UserX user = this.dataRepository.getUserById(userId);
-        if (this.dataRepository.isUserLoggedIn(user) == false) {
+        if (user == null) {
             return 0;
         }
         return this.dataRepository.getAllGlobalPosts().size();
@@ -45,46 +55,75 @@ public class TimelineController {
 
 
     @RequestMapping(value = "api/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
-    public @ResponseBody Post[] getGlobalTimelinePosts (@RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+    public @ResponseBody Post[] getGlobalTimelinePosts (@CookieValue("TWITTER_CLONE_SESSION") String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+        UserX user = this.dataRepository.getUserById(userId);
+        if (user == null) {
+            return new Post[0];
+        }
         Set<String> postIds = this.dataRepository.getAllGlobalPosts((long) offset, (long) limit);
         String[] postIdsAsArray = postIds.toArray(new String[postIds.size()]);
         Post[] posts = new Post[postIds.size()];
         for (int i = 0; i < postIds.size(); i++) {
-            posts[i] = this.dataRepository.getPostById(postIdsAsArray[postIds.size() - 1 - i]);
+            posts[i] = this.dataRepository.getPostById(postIdsAsArray[i]);
         }
         return posts;
     }
 
 
-    @RequestMapping(value = "/api/users/{userId}/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
-    public @ResponseBody List<Post> getTimelinePostsForUser (@PathVariable String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+    @RequestMapping(value = "/api/current-user/timeline/posts/count", method = RequestMethod.GET)
+    public @ResponseBody int countTimelinePostsForUser (@CookieValue("TWITTER_CLONE_SESSION") String userId) {
         UserX user = this.dataRepository.getUserById(userId);
-        if (this.dataRepository.isUserLoggedIn(user) == false) {
+        if (user == null) {
+            return 0;
+        }
+        return this.dataRepository.getTimelinePosts(userId).size();
+    }
+
+
+    @RequestMapping(value = "/api/current-user/timeline/posts", params = {"offset", "limit"}, method = RequestMethod.GET)
+    public @ResponseBody List<Post> getTimelinePostsForUser (@CookieValue("TWITTER_CLONE_SESSION") String userId, @RequestParam(value = "offset") int offset, @RequestParam(value = "limit") int limit) {
+        UserX user = this.dataRepository.getUserById(userId);
+        if (user == null) {
             return new ArrayList<>();
         }
-        List<Post> posts = this.dataRepository.getTimelinePosts(userId, (long) offset, (long) limit);
-        Collections.reverse(posts);
-        return posts;
+        return this.dataRepository.getTimelinePosts(userId, (long) offset, (long) limit);
     }
 
     /*
     * Returns a boolean to indicate success for now as I don't know how to pass errors to the client.
     * Accepts a string containing the content of the new post as the request body.
     * */
-    @RequestMapping(value = "/api/users/{userId}/timeline/posts", method = RequestMethod.POST)
-    public @ResponseBody boolean createTimelinePostForUser (@PathVariable String userId, @RequestBody String content) {
+    @RequestMapping(value = "/api/current-user/timeline/posts", method = RequestMethod.POST)
+    public @ResponseBody Post createTimelinePostForUser (@CookieValue("TWITTER_CLONE_SESSION") String userId, @RequestBody String content) {
         UserX user = this.dataRepository.getUserById(userId);
-        if (this.dataRepository.isUserLoggedIn(user) == false) {
-            return false;
+        if (user == null) {
+            System.out.println("Post Error: User is not logged in");
+            return null;
         }
-        this.dataRepository.addPost(new Post(user, content, new Date()));
-        return true;
+        Post post = new Post(user, content, new Date());
+        String id = this.dataRepository.addPost(post);
+        post.setId(id);
+
+        /*
+        * Send out websockets
+        * */
+        WebsocketMessage message = new WebsocketMessage("create", post);
+        // to all followers
+        for (String followerId : user.getFollowed()) {
+            this.websockets.convertAndSend("/timeline/users/" + followerId, message);
+        }
+        // to the user himself (to sync multiple tabs)
+        this.websockets.convertAndSend("/timeline/users/" + userId, message);
+
+        return post;
     }
 
 
 
     @RequestMapping(value = "/api/posts/{postId}", method = RequestMethod.DELETE)
     public @ResponseBody boolean deleteTimelinePostForUser (@PathVariable String postId) {
+
+        // TODO: Authorization
 
         Post post = this.dataRepository.getPostById(postId);
         this.dataRepository.deletePost(post);
@@ -94,6 +133,9 @@ public class TimelineController {
 
     @RequestMapping(value = "/api/posts/{postId}", method = RequestMethod.PUT)
     public @ResponseBody boolean updateTimelinePostForUser (@PathVariable String postId, @RequestBody String content) {
+
+        // TODO: Authorization
+
         Post post = this.dataRepository.getPostById(postId);
         post.setMessage(content);
         this.dataRepository.updatePost(post);
