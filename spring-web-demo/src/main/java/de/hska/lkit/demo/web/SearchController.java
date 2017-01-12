@@ -77,7 +77,7 @@ public class SearchController {
         } else {
             for (int i = 0; i < allUser.size(); i++) {
                 String username = allUser.get(i).getName().toLowerCase();
-                if (username.startsWith(searchData)) {
+                if (username.startsWith(searchData.toLowerCase())) {
                     searchResultUser.add(allUser.get(i));
                 }
             }
