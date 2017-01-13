@@ -2,10 +2,8 @@ package de.hska.lkit.demo.web;
 
 import de.hska.lkit.demo.web.data.model.Post;
 import de.hska.lkit.demo.web.data.model.UserX;
-import de.hska.lkit.demo.web.data.model.WebsocketMessage;
 import de.hska.lkit.demo.web.data.repo.DataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,13 +17,11 @@ public class TimelineController {
 
 
     private DataRepository dataRepository;
-    private SimpMessagingTemplate websockets;
 
     @Autowired
-    public TimelineController (DataRepository dataRepository, SimpMessagingTemplate template) {
+    public TimelineController (DataRepository dataRepository) {
         super();
         this.dataRepository = dataRepository;
-        this.websockets = template;
     }
 
     @RequestMapping(value = "/api/current-user", method = RequestMethod.GET)
@@ -103,17 +99,6 @@ public class TimelineController {
         Post post = new Post(user, content, new Date());
         String id = this.dataRepository.addPost(post);
         post.setId(id);
-
-        /*
-        * Send out websockets
-        * */
-        WebsocketMessage message = new WebsocketMessage("create", post);
-        // to all followers
-        for (String followerId : user.getFollowed()) {
-            this.websockets.convertAndSend("/timeline/users/" + followerId, message);
-        }
-        // to the user himself (to sync multiple tabs)
-        this.websockets.convertAndSend("/timeline/users/" + userId, message);
 
         return post;
     }

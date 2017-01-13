@@ -3,9 +3,17 @@ package de.hska.lkit.demo.web.data.repo;
 import de.hska.lkit.demo.web.data.model.Post;
 
 import de.hska.lkit.demo.web.data.model.UserX;
+import de.hska.lkit.demo.web.data.model.WebsocketMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.Message;
+import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.listener.PatternTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.support.atomic.RedisAtomicLong;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
@@ -36,10 +44,8 @@ public class DataRepositoryImpl implements DataRepository {
      */
     private StringRedisTemplate stringRedisTemplate;
 
-    /**
-     * to save user data as object
-     */
-    private RedisTemplate<String, String> redisTemplateUser;
+    private SimpMessagingTemplate websockets;
+
 
     private RedisTemplate<String, String> redisTemplateString;
 
@@ -61,22 +67,52 @@ public class DataRepositoryImpl implements DataRepository {
 
 
     @Autowired
-    public DataRepositoryImpl(RedisTemplate<String, String> redisTemplate, RedisTemplate<String, String> redisTemplateString, StringRedisTemplate stringRedisTemplate) {
-
-        this.redisTemplateUser = redisTemplate;
+    public DataRepositoryImpl(RedisTemplate<String, String> redisTemplateString, StringRedisTemplate stringRedisTemplate, SimpMessagingTemplate messagingTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.redisTemplateString = redisTemplateString;
         this.userId = new RedisAtomicLong("userid", stringRedisTemplate.getConnectionFactory());
         this.postId = new RedisAtomicLong("postid", stringRedisTemplate.getConnectionFactory());
+        this.websockets = messagingTemplate;
     }
 
     @PostConstruct
     private void init() {
         stringHashOperations = stringRedisTemplate.opsForHash();
         setOperations = stringRedisTemplate.opsForSet();
-        redisHashOperations = redisTemplateUser.opsForHash();
-        zSetOperationsUser = redisTemplateUser.opsForZSet();
+        redisHashOperations = stringRedisTemplate.opsForHash();
+        zSetOperationsUser = stringRedisTemplate.opsForZSet();
         zSetOperationsPost = redisTemplateString.opsForZSet();
+    }
+
+    @Bean
+    RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+
+        DataRepositoryImpl self = this;
+
+        container.addMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(Message message, byte[] bytes) {
+                /*
+                * Send out websockets
+                * */
+                String [] parts = message.toString().split(",");
+                String userId = parts[0];
+                String postId = parts[1];
+                UserX user = self.getUserById(userId);
+                Post post = self.getPostById(postId);
+
+                WebsocketMessage websocketMessage = new WebsocketMessage("create", post);
+                // to all followers
+                for (String followerId : user.getFollowed()) {
+                    self.websockets.convertAndSend("/timeline/users/" + followerId, websocketMessage);
+                }
+                // to the user himself (to sync multiple tabs)
+                self.websockets.convertAndSend("/timeline/users/" + userId, websocketMessage);
+            }
+        }, new PatternTopic("new-post-in-timeline"));
+        return container;
     }
 
 
@@ -308,6 +344,9 @@ public class DataRepositoryImpl implements DataRepository {
 
         Long score = post.getTime().getTime();
         zSetOperationsPost.add(Constants.KEY_GET_ALL_GLOBAL_POSTS_2, post.getId(), score);
+
+        // Server Pub/Sub
+        stringRedisTemplate.convertAndSend("new-post-in-timeline", post.getUserX().getId() + ',' + post.getId());
 
         return id;
     }
