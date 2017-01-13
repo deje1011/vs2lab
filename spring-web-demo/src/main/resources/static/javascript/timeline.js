@@ -192,8 +192,13 @@
     });
 
     $(document).on('click', '.timeline-new-posts-info', function () {
-        $(this).fadeOut();
-        rerender();
+        var button = $(this);
+        button.addClass('spin-animation');
+        rerender().always(function () {
+            setTimeout(function () {
+                button.removeClass('spin-animation').fadeOut();
+            }, 500);
+        });
     });
 
 }(jQuery, dataAdapter));
