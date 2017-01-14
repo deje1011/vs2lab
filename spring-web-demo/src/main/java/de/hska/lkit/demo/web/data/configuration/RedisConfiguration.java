@@ -19,10 +19,10 @@ import redis.clients.jedis.JedisPoolConfig;
 @Configuration
 public class RedisConfiguration {
 
-   @Bean
-    public RedisConnectionFactory getConnectionFactory(){
+    @Bean
+    public RedisConnectionFactory getConnectionFactory() {
         JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory(new JedisPoolConfig());
-        jedisConnectionFactory.setHostName("192.168.43.198");
+        jedisConnectionFactory.setHostName("localhost");
         jedisConnectionFactory.setPort(6379);
         jedisConnectionFactory.setPassword("");
         return jedisConnectionFactory;
@@ -30,7 +30,7 @@ public class RedisConfiguration {
 
 
     @Bean(name = "stringRedisTemplate")
-    public StringRedisTemplate getStringRedisTemplate(){
+    public StringRedisTemplate getStringRedisTemplate() {
         StringRedisTemplate stringRedisTemplate = new StringRedisTemplate(getConnectionFactory());
         stringRedisTemplate.setKeySerializer(new StringRedisSerializer());
         stringRedisTemplate.setHashValueSerializer(new StringRedisSerializer());
